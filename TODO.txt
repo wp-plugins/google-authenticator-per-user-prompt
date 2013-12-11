@@ -1,3 +1,8 @@
+High priority:
 * Internationalize
 * set tab focus on 2fa token prompt, so don't have to click or tab to get there
-* login_user() - need to save their rememberme setting? otherwise it gets wiped out? 
+* login_user() - need to save their rememberme setting? otherwise it gets wiped out?
+
+Low priority:
+* verify_login_nonce() - sends 'nonce expired' error if the nonce was invalid. maybe add new error to distinguish between the two. can't return the error code, though, b/c that would evaluate to true. have to return array to verify_original_login(). if array is empty, then they're valid, if not then redirect to login. support case where both errors happen - nonce is invalid and expired? that would leak that the user has a nonce, but is that harmful?
+* validate_application_password() - if passed $user is wp_user, then return right away? would let other plugin hook in before us and validate the user. any problems with allowing that?

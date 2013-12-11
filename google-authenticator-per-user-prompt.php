@@ -207,6 +207,8 @@ class GoogleAuthenticatorPerUserPrompt {
 	/**
 	 * Verifies that the user logged in with a valid username/password earlier in their login attempt
 	 * If we didn't do this, someone could just visit the 2FA form directly, then enter a correct 2FA token and bypass the username/password check
+	 * We're intentionally not checking if the $user passed in is already a WP_User, because they shouldn't be submitting a username/password or
+	 * have auth cookies at this point in the process.
 	 * This is called after the user enters a correct 2FA token
 	 * 
 	 * @param WP_User $user
