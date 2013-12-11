@@ -2,7 +2,7 @@
 
 /*
  * This class unhooks Google Authenticator's normal login form workflow, and replaces it with one that separates the 2FA token request
- * into a separate step, so that only users who have 2FA enabled will be prompted for it.
+ * into a second step, so that only users who have 2FA enabled will be prompted for it.
  * 
  * The process flows like this:
  * 1) A user enters a valid username and password
@@ -47,8 +47,8 @@ class GoogleAuthenticatorPerUserPrompt {
 		remove_filter( 'authenticate',        array( GoogleAuthenticator::$instance, 'check_otp' ), 50, 3 );
 
 		// Register our callbacks
-		add_filter( 'authenticate',           array( $this, 'validate_application_password' ), 10, 3 );
-		add_filter( 'authenticate',           array( $this, 'maybe_prompt_for_token' ), 25, 3 );	// after username/password check, but before cookie check
+		add_filter( 'authenticate',           array( $this, 'validate_application_password' ), 10, 3 );    // before username/password check
+		add_filter( 'authenticate',           array( $this, 'maybe_prompt_for_token' ), 25, 3 );           // after username/password check, but before cookie check
 		add_action( 'login_form_gapup_token', array( $this, 'prompt_for_token' ) );
 		add_filter( 'wp_login_errors',        array( $this, 'get_login_error_message' ) );
 	}
@@ -56,6 +56,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	/**
 	 * Checks if the submitted password was a valid application password
 	 * This is basically copied from GoogleAuthenticator::check_opt(), so it'll need to be kept in sync if changes are ever made over there
+	 * See process_token_form() for why this is necessary, instead of just relying on check_otp()
 	 * This is called by the 'authenticate' filter, while WordPress is processing a submitted username/password from the login form
 	 *
 	 * @param  int    $user_id
@@ -64,7 +65,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	 */
 	public function validate_application_password( $user, $username, $attempted_password ) {
 		$user = get_user_by( 'login', $username );
-		$is_application_request = ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) || ( defined( 'APP_REQUEST' ) && APP_REQUEST ); 
+		$is_application_request = ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) || ( defined( 'APP_REQUEST' ) && APP_REQUEST );
 		
 		if ( isset( $user->ID ) && 'enabled' == trim( get_user_option( 'googleauthenticator_pwdenabled', $user->ID ) ) && $is_application_request ) {
 			$valid_password     = json_decode( get_user_option( 'googleauthenticator_passwords', $user->ID ) );
@@ -188,7 +189,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	 */
 	protected function login_user( $user ) {
 		remove_action( 'wp_login',  array( $this, 'maybe_prompt_for_token' ), 10, 2 );	// otherwise the user would be logged out and redirected back to the token form
-		add_action( 'authenticate', array( $this, 'verify_original_login' ), 40, 3 );
+		add_action( 'authenticate', array( $this, 'verify_original_login' ), 40, 3 );   // after username/password and cookie checks
 		$user = wp_signon( array( 'user_login' => $user->user_login ) );
 		remove_action( 'authenticate', array( $this, 'verify_original_login' ), 40, 3 );
 		
@@ -259,7 +260,7 @@ class GoogleAuthenticatorPerUserPrompt {
 		
 		switch( $code ) {
 			case self::ERROR_EXPIRED_NONCE:
-				$errors->add( 'gapup_' . self::ERROR_EXPIRED_NONCE, '<strong>ERROR:</strong> Your login nonce has expired. Please login again.' );
+				$errors->add( 'gapup_' . self::ERROR_EXPIRED_NONCE, '<strong>ERROR:</strong> Your login nonce has expired. Please log in again.' );
 			break;
 		}
 		

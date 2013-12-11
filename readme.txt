@@ -33,7 +33,7 @@ No, this is built on top of the Google Authenticator plugin and requires it in o
 I've done my best to ensure that it is, but it never hurts to have other people inspect the code for vulnerabilities. If you can [find one and disclose it to me privately](http://iandunn.name/security-reward-for-new-google-authenticator-plugin), I'll send you an Amazon gift card as a thank you.
 
 = What should I do if I can't login? =
-Since this plugin integrates tightly with the Google Authenticator plugin, it's possible that at some point in the future changes in Google Authenticator will break the customized login process that this plugin implements. If that happens, I'll release an updated version of this plugin to make it compatible with the new changes.
+Since this plugin integrates tightly with the Google Authenticator plugin, it's possible that at some point in the future, changes in Google Authenticator will break the customized login process that this plugin implements. If that happens, I'll release an updated version of this plugin to make it compatible with the new changes.
  
 You may have difficulty installing the updated version if you can't login, though, so you'll need to deactivate this plugin by some alternate means, and then update it before re-activating it.
 
