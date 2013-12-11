@@ -239,7 +239,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	 * @return bool
 	 */
 	function verify_login_nonce( $user_id, $attempted_nonce ) {
-		$login_nonce = array_shift( get_user_meta( $user_id, 'gapup_login_nonce' ) );
+		$login_nonce = get_user_meta( $user_id, 'gapup_login_nonce', true );
 		$valid       = false;
 		
 		if ( isset( $login_nonce['nonce'] ) && $attempted_nonce === $login_nonce['nonce'] && time() < $login_nonce['expiration'] ) {
