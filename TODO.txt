@@ -1,2 +1,3 @@
 * Internationalize
+* set tab focus on 2fa token prompt, so don't have to click or tab to get there
 * login_user() - need to save their rememberme setting? otherwise it gets wiped out? 

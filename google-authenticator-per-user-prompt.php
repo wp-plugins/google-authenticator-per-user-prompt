@@ -227,6 +227,7 @@ class GoogleAuthenticatorPerUserPrompt {
 			);
 			
 			wp_safe_redirect( $redirect_url );
+			die();
 		}
 	}
 
