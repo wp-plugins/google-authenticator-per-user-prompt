@@ -1,0 +1,2 @@
+* Internationalize
+* login_user() - need to save their rememberme setting? otherwise it gets wiped out? 
