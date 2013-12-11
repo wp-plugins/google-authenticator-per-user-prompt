@@ -5,22 +5,25 @@
  * into a separate step, so that only users who have 2FA enabled will be prompted for it.
  * 
  * The process flows like this:
- * 1) A user successfully logs in with a valid username and password
- * 2) If they don't have 2FA enabled, they continue to the Administration Panels like normal. If they do, they continue to the next step.
+ * 1) A user enters a valid username and password
+ * 2) If they don't have 2FA enabled, of if they're using an application password, they're logged in like normal.
+ *    If they do have 2FA enabled, they continue to the next step.
  * 3) We create a nonce and store it in their usermeta
- * 4) We log them out and redirect them to a form prompting them for the 2FA token. The nonce is passed in the URL parameters. 
- *    If they weren't logged out, they could just manually visit the Administration Panels without being forced to enter a valid 2FA token.
- * 5) If they supply the correct nonce and token, we log them back in and redirect them to their original destination.
+ * 4) Before they are authenticated, we redirect them to a form prompting them for the 2FA token. The nonce is passed in the URL parameters.
+ * 5) If they supply the correct nonce and token, we log them in and redirect them to their original destination.
  * 
  * Test cases:
  * User enters correct username/password, has 2FA disabled  => Bypass prompt
- * User enters correct username/password, has 2FA enabled   => Taken to prompt, can't access wp-admin yet
+ * User enters correct username/password, has 2FA enabled   => Taken to prompt, isn't logged in yet, doesn't receive auth cookies and can't access wp-admin 
  * User enters correct username/password, but nonce expires => Redirected to login
  * User enters correct 2FA token                            => logged in, redirect to original redirect_to parameter
  * User enters incorrect 2FA token                          => Redirected to 2FA form, shown error, can login if enter correct code this time
  * User enters correct application password using XMLRPC    => Logged in, bypasses 2FA token
  * User enters correct application password using web       => Redirected to login form
  * User visits 2FA form directly                            => Redirected to login screen
+ * 
+ * To check if auth cookies are sent after entering username/password but before entering the 2FA token:
+ * curl -i --data "log=username&pwd=password&wp-submit=Log+In&testcookie=1" --cookie "wordpress_test_cookie=WP+Cookie+check" http://example.org/wp-login.php
  */
 class GoogleAuthenticatorPerUserPrompt {
 	protected $is_using_application_password;
@@ -44,40 +47,10 @@ class GoogleAuthenticatorPerUserPrompt {
 		remove_filter( 'authenticate',        array( GoogleAuthenticator::$instance, 'check_otp' ), 50, 3 );
 
 		// Register our callbacks
-		add_action( 'wp_login',               array( $this, 'maybe_prompt_for_token' ), 10, 2 );
-		add_action( 'login_form_gapup_token', array( $this, 'prompt_for_token' ) );
 		add_filter( 'authenticate',           array( $this, 'validate_application_password' ), 10, 3 );
+		add_filter( 'authenticate',           array( $this, 'maybe_prompt_for_token' ), 25, 3 );	// after username/password check, but before cookie check
+		add_action( 'login_form_gapup_token', array( $this, 'prompt_for_token' ) );
 		add_filter( 'wp_login_errors',        array( $this, 'get_login_error_message' ) );
-	}
-
-	/**
-	 * Redirects the user to the token prompt if they have 2FA enabled
-	 * If they don't have 2FA enabled, this does nothing and they proceed to the Administration Panels like normal
-	 * Login attempts with an application password are also allowed to bypass 2FA
-	 * This is called during the wp_login action, after the user has entered a correct username/password
-	 * 
-	 * @param string  $user_login
-	 * @param WP_User $user
-	 */
-	public function maybe_prompt_for_token( $user_login, $user ) {
-		if ( 'enabled' != trim( get_user_option( 'googleauthenticator_enabled', $user->ID ) ) || $this->is_using_application_password ) {
-			return;
-		}
-
-		$login_nonce = $this->create_login_nonce( $user->ID );
-		
-		$redirect_url = sprintf(
-			'%s?action=gapup_token&user_id=%d&gapup_login_nonce=%s%s',
-			wp_login_url(),
-			$user->ID,
-			$login_nonce['nonce'],
-			isset( $_POST['redirect_to'] ) ? '&redirect_to=' . urlencode( $_POST['redirect_to'] ) : ''
-		);
-		
-		wp_logout();	// otherwise they could just ignore the 2FA token form and manually visit the Administration Panels. If they successfully enter a token, we'll log them back in.
-		
-		wp_safe_redirect( $redirect_url );
-		die();
 	}
 
 	/**
@@ -105,6 +78,37 @@ class GoogleAuthenticatorPerUserPrompt {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Redirects the user to the token prompt if they have 2FA enabled
+	 * If they don't have 2FA enabled, this does nothing and they proceed to the Administration Panels like normal
+	 * Login attempts with an application password are also allowed to bypass 2FA
+	 * This is called during the authenticate filter, after the user has entered a username/password
+	 * 
+	 * @param  mixed   $user
+	 * @param  string  $username
+	 * @param  string  $attempted_password
+	 * @return mixed
+	 */
+	public function maybe_prompt_for_token( $user, $username, $attempted_password ) {
+		if ( is_a( $user, 'WP_User' ) ) {	// they entered a valid username/password
+			if ( 'enabled' == trim( get_user_option( 'googleauthenticator_enabled', $user->ID ) ) && ! $this->is_using_application_password ) {
+				$login_nonce  = $this->create_login_nonce( $user->ID );
+				$redirect_url = sprintf(
+					'%s?action=gapup_token&user_id=%d&gapup_login_nonce=%s%s',
+					wp_login_url(),
+					$user->ID,
+					$login_nonce['nonce'],
+					isset( $_REQUEST['redirect_to'] ) ? '&redirect_to=' . urlencode( $_REQUEST['redirect_to'] ) : ''
+				);
+				
+				wp_safe_redirect( $redirect_url );
+				die();
+			}	
+		}
+		
+		return $user;
 	}
 
 	/**
@@ -179,7 +183,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	}
 	
 	/**
-	 * Logs the user back in
+	 * Logs the user in
 	 * This is called after the user has successfully entered a token
 	 */
 	protected function login_user( $user ) {
