@@ -4,7 +4,7 @@ Donate link:       http://nhmin.org
 Tags:              google authenticator,two factor authentication
 Requires at least: 3.5
 Tested up to:      3.8-RC1
-Stable tag:        0.1
+Stable tag:        0.2
 License:           GPLv2 or Later
 
 Modifies the Google Authenticator plugin so that only users with 2FA enabled are prompted for the authentication token.
