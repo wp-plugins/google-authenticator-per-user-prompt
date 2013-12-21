@@ -4,7 +4,7 @@ Donate link:       http://nhmin.org
 Tags:              google authenticator,two factor authentication
 Requires at least: 3.5
 Tested up to:      3.8-RC1
-Stable tag:        0.2
+Stable tag:        0.3
 License:           GPLv2 or Later
 
 Modifies the Google Authenticator plugin so that only users with 2FA enabled are prompted for the authentication token.
@@ -48,7 +48,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 
 == Changelog ==
 
-= v0.3 () =
+= v0.3 (2013-12-20) =
 * [NEW] Focus automatically set on token input field
 
 = v0.2 (2013-12-11) =
@@ -61,6 +61,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 == Upgrade Notice ==
 
 = 0.3 =
+This version automatically focuses on the 2FA token input field, so that you don't have to click on it or tab to it.
 
 = 0.2 =
 This version contains a critical security fix for a bug that would allow an attacker with a valid username/password to bypass the 2FA token prompt. Please upgrade immediately.
