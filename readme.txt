@@ -48,6 +48,9 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 
 == Changelog ==
 
+= v0.3 () =
+* [NEW] Focus automatically set on token input field
+
 = v0.2 (2013-12-11) =
 * [FIX] User with valid username/password no longer temporarily logged in before entering 2FA token. Prevents leaking auth cookies. props cathyjf
 
@@ -56,6 +59,8 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 
 
 == Upgrade Notice ==
+
+= 0.3 =
 
 = 0.2 =
 This version contains a critical security fix for a bug that would allow an attacker with a valid username/password to bypass the 2FA token prompt. Please upgrade immediately.
