@@ -49,7 +49,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 == Changelog ==
 
 = v0.4 (2013-12-30) =
-* [UPDATE] Added support for new application password format in Google Authenticator 0.46
+* [UPDATE] Added support for new application password format in Google Authenticator 0.45
 
 = v0.3 (2013-12-20) =
 * [NEW] Focus automatically set on token input field
@@ -64,7 +64,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 == Upgrade Notice ==
 
 = 0.4 =
-This version adds support for the new application password format that will be used in Google Authenticator 0.46.
+This version adds support for the new application password format that will be used in Google Authenticator 0.45.
 
 = 0.3 =
 This version automatically focuses on the 2FA token input field, so that you don't have to click on it or tab to it.
