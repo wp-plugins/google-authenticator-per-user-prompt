@@ -59,20 +59,23 @@ class GoogleAuthenticatorPerUserPrompt {
 	 * See process_token_form() for why this is necessary, instead of just relying on check_otp()
 	 * This is called by the 'authenticate' filter, while WordPress is processing a submitted username/password from the login form
 	 *
+	 * @todo Google Authenticator started migrating from sha1() to wp_hash_password() in r830429-plugins.
+	 * Once it removes SHA1 support, then you should do the same here.
+	 *
 	 * @param  int    $user_id
 	 * @param  string $password
 	 * @return bool
 	 */
-	public function validate_application_password( $user, $username, $attempted_password ) {
+	public function validate_application_password( $user, $username, $attempted_password_plaintext ) {
 		$user = get_user_by( 'login', $username );
 		$is_application_request = ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) || ( defined( 'APP_REQUEST' ) && APP_REQUEST );
 		
 		if ( isset( $user->ID ) && 'enabled' == trim( get_user_option( 'googleauthenticator_pwdenabled', $user->ID ) ) && $is_application_request ) {
-			$valid_password     = json_decode( get_user_option( 'googleauthenticator_passwords', $user->ID ) );
-			$valid_password     = trim( $valid_password->{'password'} );
-			$attempted_password = sha1( strtoupper( str_replace( ' ', '', $attempted_password ) ) );
+			$valid_password_hash           = json_decode( get_user_option( 'googleauthenticator_passwords', $user->ID ) );
+			$valid_password_hash           = trim( $valid_password_hash->{'password'} );
+			$attempted_password_plaintext  = strtoupper( str_replace( ' ', '', $attempted_password_plaintext ) );
 
-			if ( $attempted_password === $valid_password ) {
+			if ( sha1( $attempted_password_plaintext ) === $valid_password_hash || wp_check_password( $attempted_password_plaintext, $valid_password_hash ) ) {
 				$this->is_using_application_password = true;
 				return $user;
 			}
