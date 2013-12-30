@@ -3,8 +3,8 @@ Contributors:      iandunn
 Donate link:       http://nhmin.org
 Tags:              google authenticator,two factor authentication
 Requires at least: 3.5
-Tested up to:      3.8-RC1
-Stable tag:        0.3
+Tested up to:      3.8
+Stable tag:        0.4
 License:           GPLv2 or Later
 
 Modifies the Google Authenticator plugin so that only users with 2FA enabled are prompted for the authentication token.
@@ -48,7 +48,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 
 == Changelog ==
 
-= v0.4 () =
+= v0.4 (2013-12-30) =
 * [UPDATE] Added support for new application password format in Google Authenticator 0.46
 
 = v0.3 (2013-12-20) =
