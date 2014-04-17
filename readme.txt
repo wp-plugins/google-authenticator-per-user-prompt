@@ -3,7 +3,7 @@ Contributors:      iandunn
 Donate link:       http://nhmin.org
 Tags:              google authenticator,two factor authentication
 Requires at least: 3.5
-Tested up to:      3.8
+Tested up to:      3.9
 Stable tag:        0.4
 License:           GPLv2 or Later
 
