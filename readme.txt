@@ -30,7 +30,7 @@ Once the plugin is installed and activated, you don't need to do anything else.
 No, this is built on top of the Google Authenticator plugin and requires it in order to work.
 
 = Is this plugin secure? =
-I've done my best to ensure that it is, but it never hurts to have other people inspect the code for vulnerabilities. If you can [find one and disclose it to me privately](http://iandunn.name/security-reward-for-new-google-authenticator-plugin), I'll send you an Amazon gift card as a thank you.
+I've done my best to ensure that it is, but just in case I missed anything [I also offer a security bounty](https://hackerone.com/iandunn-projects/) for any vulnerabilities that can be found and privately disclosed in any of my plugins.
 
 = What should I do if I can't login? =
 Since this plugin integrates tightly with the Google Authenticator plugin, it's possible that at some point in the future, changes in Google Authenticator will break the customized login process that this plugin implements. If that happens, I'll release an updated version of this plugin to make it compatible with the new changes.
