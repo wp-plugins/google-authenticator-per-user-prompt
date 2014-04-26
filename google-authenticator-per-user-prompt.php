@@ -21,6 +21,7 @@
  * User enters correct application password using XMLRPC    => Logged in, bypasses 2FA token
  * User enters correct application password using web       => Redirected to login form
  * User visits 2FA form directly                            => Redirected to login screen
+ * User A enters correct token, then User B enters same token => Redirected to 2FA form, shown error
  * 
  * To check if auth cookies are sent after entering username/password but before entering the 2FA token:
  * curl -i --data "log=username&pwd=password&wp-submit=Log+In&testcookie=1" --cookie "wordpress_test_cookie=WP+Cookie+check" http://example.org/wp-login.php
