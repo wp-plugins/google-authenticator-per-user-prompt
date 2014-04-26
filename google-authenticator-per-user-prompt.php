@@ -123,7 +123,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	 * @param $user_id
 	 * @return array|bool
 	 */
-	function create_login_nonce( $user_id ) {
+	protected function create_login_nonce( $user_id ) {
 		$login_nonce = array(
 			'nonce'      => wp_hash( $user_id . mt_rand() . microtime(), 'nonce' ),
 			'expiration' => time() + apply_filters( 'gapup_nonce_expiration', MINUTE_IN_SECONDS * 3 )
@@ -244,7 +244,7 @@ class GoogleAuthenticatorPerUserPrompt {
 	 * @param  string $attempted_nonce
 	 * @return bool
 	 */
-	function verify_login_nonce( $user_id, $attempted_nonce ) {
+	protected function verify_login_nonce( $user_id, $attempted_nonce ) {
 		$login_nonce = get_user_meta( $user_id, 'gapup_login_nonce', true );
 		$valid       = false;
 		
