@@ -14,7 +14,7 @@
 		<?php GoogleAuthenticator::$instance->loginform(); ?>
 	
 		<p class="submit">
-			<input type="submit" name="gapup_token_prompt" class="button button-primary button-large" value="<?php esc_attr_e( 'Log In' ); ?>" />
+			<input type="submit" id="gapup_token_prompt" name="gapup_token_prompt" class="button button-primary button-large" value="<?php esc_attr_e( 'Log In' ); ?>" />
 		</p>
 	</form>
 	
