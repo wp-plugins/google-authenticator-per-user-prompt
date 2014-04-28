@@ -44,9 +44,15 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * @param WebGuy $i
 	 * @param string $username
 	 * @param string $password
+	 * @param string $redirect_to
 	 */
-	protected function login( WebGuy $i, $username, $password ) {
-		$i->amOnPage( '/wp-login.php' );
+	protected function login( WebGuy $i, $username, $password, $redirect_to = false ) {
+		$url = '/wp-login.php';
+		if ( $redirect_to ) {
+			$url .= '?redirect_to=' . $redirect_to;
+		}
+
+		$i->amOnPage( $url );
 		$i->fillField( 'user_login', $username );
 		$i->fillField( 'user_pass', $password );
 		$i->click( '#wp-submit' );
@@ -65,8 +71,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		if ( $expect_logged_in ) {
 			$i->see( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
-			$i->seeCurrentUrlEquals( '/wp-admin/' );
-			$i->seeCookie( 'wordpress_49d4ab732056d505c2c751e2f7a5d842' );				// todo how to get hash programatically?
+			// $i->seeCurrentUrlMatches( '^\/wp-admin/' );    // make sure it starts with /wp-admin, but still allow * after that (e.g., ?redirect_to=[foo])		// todo
+			$i->seeCookie( 'wordpress_49d4ab732056d505c2c751e2f7a5d842' );				// todo how to get hash programmatically?
 			$i->seeCookie( 'wordpress_logged_in_49d4ab732056d505c2c751e2f7a5d842' );	// todo also need to validate hash some how? maybe not
 		} else {
 			$i->dontSee( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
@@ -93,11 +99,10 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	/**
 	 * Enable Google Authenticator for the given account.
 	 *
-	 * @param WebGuy   $i
-	 * @param Scenario $scenario
-	 * @param int      $user_id
+	 * @param WebGuy $i
+	 * @param int    $user_id
 	 */
-	protected function enable_2fa( WebGuy $i, Scenario $scenario, $user_id ) {
+	protected function enable_2fa( WebGuy $i, $user_id ) {
 		$i->haveInDatabase(
 			self::TABLE_PREFIX . 'usermeta',
 			array(
@@ -109,71 +114,95 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	}
 
 	/**
-	 * Action:           Log in with invalid credentials
+	 * Attempt to login with an invalid username or password.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Enabled or Disabled
+	 *     Username/password are: Invalid
+	 *
+	 * Action:           Send every possible combination of invalid username and password.
 	 * Expected results: The user is redirected back to wp-login.php.
 	 *                   The user is shown an error.
 	 *                   The user is not logged in.
 	 *
-	 * @group invalid_credentials
+	 * @group 2fa_enabled
+	 * @group 2fa_disabled
+	 * @group invalid_username_password
 	 *
 	 * @param WebGuy   $i
 	 * $param Scenario $scenario
 	 */
-	public function login_invalid_credentials( WebGuy $i, Scenario $scenario ) {
-		$i->wantTo( 'Log in with invalid credentials.' );
+	public function login_with_invalid_username_or_password( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Log in with an invalid username or password.' );
 
 		$this->login( $i, self::VALID_USERNAME, self::INVALID_PASSWORD );
-		$i->see( sprintf( 'The password you entered for the username %s is incorrect', self::VALID_USERNAME ), '#login_error' );
+		$i->see( sprintf( 'The password you entered for the username %s is incorrect.', self::VALID_USERNAME ), '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
 		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
 
 		$this->login( $i, self::INVALID_USERNAME, self::VALID_PASSWORD );
-		$i->see( 'Invalid username', '#login_error' );
+		$i->see( 'Invalid username.', '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
 		$this->assert_user_is_logged_in( $i, self::INVALID_USERNAME, false );
 		
 		$this->login( $i, self::INVALID_USERNAME, self::INVALID_PASSWORD );
-		$i->see( 'Invalid username', '#login_error' );
+		$i->see( 'Invalid username.', '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
 		$this->assert_user_is_logged_in( $i, self::INVALID_USERNAME, false );
 	}
 	
 	/**
-	 * Action:           Log in with valid credentials when the account has 2FA disabled.
+	 * Attempt to login when 2FA is disabled.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Disabled
+	 *     Username/password are: Valid
+	 *
+	 * Action:           Send valid username and password.
 	 * Expected results: The user is not redirected to the 2FA token prompt screen.
 	 *                   The user is logged in.
 	 *
 	 * @group 2fa_disabled
-	 * @group valid_credentials
+	 * @group valid_username_password
 	 *
 	 * @param WebGuy   $i
 	 * $param Scenario $scenario
 	 */
-	public function login_2fa_disabled_valid_credentials( WebGuy $i, Scenario $scenario ) {
-		$i->wantTo( 'Log in with valid credentials when the account has 2FA disabled.' );
+	public function login_with_2fa_disabled( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Log in when 2FA is disabled.' );
 
 		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
 		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, true );
 	}
 
 	/**
-	 * Action:           Log in with valid credentials when the account has 2FA enabled.
+	 * Attempt to login with a valid OTP.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Enabled
+	 *     Username/password are: Valid
+	 *     OTP is:                Valid
+	 *     Nonce is:              Valid
+	 *
+	 * Action:           Send valid username/password.
 	 * Expected results: The user is redirected to the 2FA token prompt screen.
 	 *                   The user is not logged in yet.
-	 * Action:           Enter a valid OTP.
-	 * Expected results: The user is logged in.
+	 * Action:           Send a valid OTP.
+	 * Expected results: The user is redirected to wp-admin
+	 *                   The user is logged in.
 	 *
 	 * @group 2fa_enabled
-	 * @group valid_credentials
+	 * @group valid_username_password
 	 * @group valid_otp
+	 * @group valid_nonce
 	 *
 	 * @param WebGuy   $i
 	 * @param Scenario $scenario
 	 */
-	public function login_2fa_enabled_valid_credentials_valid_otp( WebGuy $i, Scenario $scenario ) {
-		$i->wantTo( 'Log in with valid credentials when the account has 2FA enabled.' );
+	public function login_with_valid_otp( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Log in with a valid OTP.' );
 
-		$this->enable_2fa( $i, $scenario, self::VALID_USER_ID );
+		$this->enable_2fa( $i, self::VALID_USER_ID );
 		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
 		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
 		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
@@ -181,11 +210,93 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, true );
 	}
 
+	/**
+	 * Attempt to login with an expired nonce.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Enabled
+	 *     Username/password are: Valid
+	 *     OTP is:                Valid
+	 *     Nonce is:              Expired
+	 *
+	 * Action:           Send valid username/password.
+	 * Expected results: The user is redirected to the 2FA token prompt screen.
+	 *                   The user is not logged in yet.
+	 * Action:           Send a valid OTP.
+	 *                   Wait until the nonce expires.
+	 * Expected results: The user is redirected back to wp-login.php
+	 *                   The user is not logged in.
+	 *                   The user sees an error message.
+	 *
+	 * @group 2fa_enabled
+	 * @group valid_username_password
+	 * @group valid_otp
+	 * @group expired_nonce
+	 * @group wait
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_with_expired_nonce( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Login with an expired nonce.' );
+
+		$this->enable_2fa( $i, self::VALID_USER_ID );
+		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
+		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+
+		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
+		if ( $scenario->running() ) {
+			sleep( 60 * 3 + 1 );
+		}
+		$this->send_otp( $i, $this->valid_otp );
+
+		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
+	}
+
+	/**
+	 * Attempt to log in and be redirected to the original requested location.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Enabled
+	 *     Username/password are: Valid
+	 *     OTP is:                Valid
+	 *     Nonce is:              Valid
+	 *
+	 * Action:           Send a valid username/password.
+	 * Expected results: The user is redirected to the 2FA token prompt screen.
+	 *                   The user is not logged in yet.
+	 * Action:           Enter a valid OTP.
+	 * Expected results: The user is logged in.
+	 *                   The user is redirected to the redirect_to parameter.
+	 *
+	 * @group 2fa_enabled
+	 * @group valid_username_password
+	 * @group valid_otp
+	 * @group valid_nonce
+	 * @group redirect_to
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_with_redirect_to( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Log in and then be redirected to my original destination.' );
+		$redirect_to = '/wp-admin/edit.php';
+
+		$this->enable_2fa( $i, self::VALID_USER_ID );
+		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD, $redirect_to );
+		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
+		$this->send_otp( $i, $this->valid_otp );
+		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, true );
+		$i->seeCurrentUrlEquals( $redirect_to );
+	}
+
 	/*
+	 * @todo
 	 * Cases to add:
 	 *
-	 * User enters correct username/password, but nonce expires   => Redirected to login
-	 * User enters correct 2FA token                              => logged in, redirect to original redirect_to parameter
+	 * User entered valid 2fa token, but then waited too long to submit and it expired => Redirected to 2FA form, shown error, can login if enter correct code this time
 	 * User enters incorrect 2FA token                            => Redirected to 2FA form, shown error, can login if enter correct code this time
 	 * User enters correct application password using XMLRPC      => Logged in, bypasses 2FA token
 	 * User enters correct application password using web         => Redirected to login form
