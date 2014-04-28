@@ -6,26 +6,13 @@
  * 
  * The process flows like this:
  * 1) A user enters a valid username and password
- * 2) If they don't have 2FA enabled, of if they're using an application password, they're logged in like normal.
+ * 2) If they don't have 2FA enabled, of if they're using an application password, they're logged in like normal and skip the remaining steps.
  *    If they do have 2FA enabled, they continue to the next step.
  * 3) We create a nonce and store it in their usermeta
- * 4) Before they are authenticated, we redirect them to a form prompting them for the 2FA token. The nonce is passed in the URL parameters.
+ * 4) Before they are logged in and sent auth cookies, we redirect them to a form prompting them for the 2FA token. The nonce is passed in the URL parameters.
  * 5) If they supply the correct nonce and token, we log them in and redirect them to their original destination.
- * 
- * Test cases:
- * User enters correct username/password, has 2FA disabled  => Bypass prompt
- * User enters correct username/password, has 2FA enabled   => Taken to prompt, isn't logged in yet, doesn't receive auth cookies and can't access wp-admin 
- * User enters correct username/password, but nonce expires => Redirected to login
- * User enters correct 2FA token                            => logged in, redirect to original redirect_to parameter
- * User enters incorrect 2FA token                          => Redirected to 2FA form, shown error, can login if enter correct code this time
- * User enters correct application password using XMLRPC    => Logged in, bypasses 2FA token
- * User enters correct application password using web       => Redirected to login form
- * User visits 2FA form directly                            => Redirected to login screen
- * User A enters correct token, then User B enters same token => Redirected to 2FA form, shown error
- * 
- * To check if auth cookies are sent after entering username/password but before entering the 2FA token:
- * curl -i --data "log=username&pwd=password&wp-submit=Log+In&testcookie=1" --cookie "wordpress_test_cookie=WP+Cookie+check" http://example.org/wp-login.php
  */
+
 class Google_Authenticator_Per_User_Prompt {
 	protected $is_using_application_password;
 	const ERROR_EXPIRED_NONCE = 100;
