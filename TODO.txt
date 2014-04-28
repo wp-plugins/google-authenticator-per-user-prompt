@@ -2,8 +2,6 @@
 
 * Build automated acceptance tests
 	* Figure out how to test auth cookies
-* rename GoogleAuthenticatorPerUserPrompt to Google_Authenticator_Per_User_Prompt
-	* maybe ensure backcompat, but probably not worth it. unlikely anyone is referencing it directly
 * login_user() - need to save their rememberme setting, otherwise it gets wiped out
 	* add acceptance tests before writing
 * Get code coverage working for acceptance tests

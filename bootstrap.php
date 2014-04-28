@@ -52,7 +52,7 @@ function gapup_requirements_error() {
  */
 if ( gapup_requirements_met() ) {
 	require_once( dirname( __FILE__ ) . '/google-authenticator-per-user-prompt.php' );
-	$GLOBALS['gapup'] = new GoogleAuthenticatorPerUserPrompt();
+	$GLOBALS['gapup'] = new Google_Authenticator_Per_User_Prompt();
 } else {
 	add_action( 'admin_notices', 'gapup_requirements_error' );
 }

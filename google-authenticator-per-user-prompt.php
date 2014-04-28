@@ -26,7 +26,7 @@
  * To check if auth cookies are sent after entering username/password but before entering the 2FA token:
  * curl -i --data "log=username&pwd=password&wp-submit=Log+In&testcookie=1" --cookie "wordpress_test_cookie=WP+Cookie+check" http://example.org/wp-login.php
  */
-class GoogleAuthenticatorPerUserPrompt {
+class Google_Authenticator_Per_User_Prompt {
 	protected $is_using_application_password;
 	const ERROR_EXPIRED_NONCE = 100;
 	
@@ -273,4 +273,4 @@ class GoogleAuthenticatorPerUserPrompt {
 		
 		return $errors;
 	}
-} // end GoogleAuthenticatorPerUserPrompt
+} // end Google_Authenticator_Per_User_Prompt
