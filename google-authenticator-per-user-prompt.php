@@ -150,7 +150,7 @@ class Google_Authenticator_Per_User_Prompt {
 	/**
 	 * Process the submitted 2FA token form
 	 * The user's submitted password isn't passed to check_otp() because we would need a way to securely store it in plaintext between the time it was entered and
-	 * when we use it here. Because of this, check_opt() won't authenticate application passwords, so we're checking for those in maybe_prompt_for_token() instead.
+	 * when we use it here. Because of this, check_otp() won't authenticate application passwords, so we're checking for those in maybe_prompt_for_token() instead.
 	 * 
 	 * @param  array   $form
 	 * @param  WP_User $user

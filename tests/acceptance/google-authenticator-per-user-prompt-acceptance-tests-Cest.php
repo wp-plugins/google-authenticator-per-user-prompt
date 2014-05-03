@@ -5,7 +5,7 @@ use \Codeception\Scenario;
 use \PHPUnit_Framework_Assert;
 
 class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
-	protected $valid_otp;	// todo should this just be local in each method?
+	protected $valid_otp;
 
 	const VALID_USER_ID                = 2;
 	const VALID_USERNAME               = '2fa-tester';
@@ -15,9 +15,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_PASSWORD             = 'fake-password';
 	const INVALID_OTP                  = '000000';
 	const INVALID_APPLICATION_PASSWORD = 'fake-password';
-	const TABLE_PREFIX                 = 'wp_';
-
-	// todo maybe all of those protected methods should be helpers, so that this file only has the actual tests?
 
 	/**
 	 * Prompt the tester for a valid one time password
@@ -28,66 +25,20 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * Codeception runs each test twice, so we avoid prompting during the analysis phase,
 	 * because the analyzer would never input anything.
 	 *
+	 * @todo This should probably be a helper too, but I'm not sure there'd be a way to access the
+	 * value. It wouldn't be returned, and codeception uses call_user_func(), which won't pass
+	 * by reference.
+	 *
 	 * @param WebGuy   $i
 	 * @param Scenario $scenario
 	 * @param string   $username
 	 */
-	protected function prompt_for_valid_otp( $i, Scenario $scenario, $username ) {
+	protected function enterValidOtp( WebGuy $i, Scenario $scenario, $username ) {
 		if ( ! $scenario->running() ) {
 			return;
 		}
 
 		$this->valid_otp = readline( sprintf( "\nEnter the current OTP for %s: ", $username ) );
-	}
-
-	/**
-	 * Send a login request with the given username and password.
-	 *
-	 * @param WebGuy $i
-	 * @param string $username
-	 * @param string $password
-	 * @param string $redirect_to
-	 */
-	protected function login( WebGuy $i, $username, $password, $redirect_to = false ) {
-		$url = '/wp-login.php';
-		if ( $redirect_to ) {
-			$url .= '?redirect_to=' . $redirect_to;
-		}
-
-		$i->amOnPage( $url );
-		$i->fillField( 'user_login', $username );
-		$i->fillField( 'user_pass', $password );
-		$i->click( '#wp-submit' );
-	}
-
-	/**
-	 * Send a one-time password to the 2FA token prompt.
-	 *
-	 * @param WebGuy $i
-	 * @param string $otp
-	 */
-	protected function send_otp( WebGuy $i, $otp ) {
-		$i->see( 'Google Authenticator code' );
-		$i->seeInCurrentUrl( 'action=gapup_token' );
-		$i->fillField( 'user_email', $otp );	// [sic], Google Authenticator uses the e-mail field instead of one named more appropriately
-		$i->click( '#gapup_token_prompt' );
-	}
-
-	/**
-	 * Enable Google Authenticator for the given account.
-	 *
-	 * @param WebGuy $i
-	 * @param int    $user_id
-	 */
-	protected function enable_2fa( WebGuy $i, $user_id ) {
-		$i->haveInDatabase(
-			self::TABLE_PREFIX . 'usermeta',
-			array(
-				'user_id'    => $user_id,
-				'meta_key'   => 'googleauthenticator_enabled',
-				'meta_value' => 'enabled'
-			)
-		);
 	}
 
 	/**
@@ -112,17 +63,17 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	public function login_with_invalid_username_or_password( WebGuy $i, Scenario $scenario ) {
 		$i->wantTo( 'Log in with an invalid username or password.' );
 
-		$this->login( $i, self::VALID_USERNAME, self::INVALID_PASSWORD );
+		$i->login( self::VALID_USERNAME, self::INVALID_PASSWORD );
 		$i->see( sprintf( 'The password you entered for the username %s is incorrect.', self::VALID_USERNAME ), '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 
-		$this->login( $i, self::INVALID_USERNAME, self::VALID_PASSWORD );
+		$i->login( self::INVALID_USERNAME, self::VALID_PASSWORD );
 		$i->see( 'Invalid username.', '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
 		$i->amNotLoggedIn( self::INVALID_USERNAME );
 		
-		$this->login( $i, self::INVALID_USERNAME, self::INVALID_PASSWORD );
+		$i->login( self::INVALID_USERNAME, self::INVALID_PASSWORD );
 		$i->see( 'Invalid username.', '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
 		$i->amNotLoggedIn( self::INVALID_USERNAME );
@@ -148,7 +99,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	public function login_with_2fa_disabled( WebGuy $i, Scenario $scenario ) {
 		$i->wantTo( 'Log in when 2FA is disabled.' );
 
-		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amLoggedIn( self::VALID_USERNAME );
 	}
 
@@ -179,11 +130,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	public function login_with_valid_otp( WebGuy $i, Scenario $scenario ) {
 		$i->wantTo( 'Log in with a valid OTP.' );
 
-		$this->enable_2fa( $i, self::VALID_USER_ID );
-		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
-		$this->send_otp( $i, $this->valid_otp );
+		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->valid_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 	}
 
@@ -217,15 +168,15 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	public function login_with_expired_nonce( WebGuy $i, Scenario $scenario ) {
 		$i->wantTo( 'Login with an expired nonce.' );
 
-		$this->enable_2fa( $i, self::VALID_USER_ID );
-		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 
-		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
+		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
 		if ( $scenario->running() ) {
-			sleep( 16 );    /* requires an mu-plugin callback setup for the gapup_nonce_expiration filter which returns 15 seconds. otherwise would have to wait 3 minutes while running tests */
+			sleep( 26 );    /* requires an mu-plugin callback setup for the gapup_nonce_expiration filter which returns 15 seconds. otherwise would have to wait 3 minutes while running tests */
 		}
-		$this->send_otp( $i, $this->valid_otp );
+		$i->sendOtp( $this->valid_otp );
 
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
@@ -260,11 +211,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->wantTo( 'Log in and then be redirected to my original destination.' );
 		$redirect_to = '/wp-admin/edit.php';
 
-		$this->enable_2fa( $i, self::VALID_USER_ID );
-		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD, $redirect_to );
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, $redirect_to );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
-		$this->send_otp( $i, $this->valid_otp );
+		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->valid_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeCurrentUrlEquals( $redirect_to );
 	}

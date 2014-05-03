@@ -2065,6 +2065,71 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
+     * Send a login request with the given username and password.
+	 *
+	 * @param string $username
+	 * @param string $password
+	 * @param string $redirect_to
+     * @see Codeception\Module\WebHelper::login()
+     * @return \Codeception\Maybe
+     */
+    public function login($username, $password, $redirect_to = null) {
+        $this->scenario->addStep(new \Codeception\Step\Action('login', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Enable Google Authenticator for the given account.
+	 *
+	 * @param int $user_id
+     * @see Codeception\Module\WebHelper::enable2fa()
+     * @return \Codeception\Maybe
+     */
+    public function enable2fa($user_id) {
+        $this->scenario->addStep(new \Codeception\Step\Action('enable2fa', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Send a one-time password to the 2FA token prompt.
+	 *
+	 * @param string $otp
+     * @see Codeception\Module\WebHelper::sendOtp()
+     * @return \Codeception\Maybe
+     */
+    public function sendOtp($otp) {
+        $this->scenario->addStep(new \Codeception\Step\Action('sendOtp', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
      * Asserts that a cookie matching $pattern exists.
 	 *
 	 * @param string $pattern
