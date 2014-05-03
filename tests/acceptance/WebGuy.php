@@ -6,6 +6,7 @@
 
 use \Codeception\Maybe;
 use Codeception\Module\PhpBrowser;
+use Codeception\Module\WebHelper;
 use Codeception\Module\Db;
 
 /**
@@ -2051,6 +2052,88 @@ class WebGuy extends \Codeception\AbstractGuy
      */
     public function getName() {
         $this->scenario->addStep(new \Codeception\Step\Action('getName', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that a cookie matching $pattern exists
+	 *
+	 * @param string $pattern
+    * Conditional Assertion: Test won't be stopped on fail
+     * @see Codeception\Module\WebHelper::seeCookieMatches()
+     * @return \Codeception\Maybe
+     */
+    public function canSeeCookieMatches($pattern) {
+        $this->scenario->addStep(new \Codeception\Step\ConditionalAssertion('seeCookieMatches', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that a cookie matching $pattern exists
+	 *
+	 * @param string $pattern
+     * @see Codeception\Module\WebHelper::seeCookieMatches()
+     * @return \Codeception\Maybe
+     */
+    public function seeCookieMatches($pattern) {
+        $this->scenario->addStep(new \Codeception\Step\Assertion('seeCookieMatches', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that no cookies matching $pattern exist
+	 *
+	 * @param string $pattern
+    * Conditional Assertion: Test won't be stopped on fail
+     * @see Codeception\Module\WebHelper::dontSeeCookieMatches()
+     * @return \Codeception\Maybe
+     */
+    public function cantSeeCookieMatches($pattern) {
+        $this->scenario->addStep(new \Codeception\Step\ConditionalAssertion('dontSeeCookieMatches', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that no cookies matching $pattern exist
+	 *
+	 * @param string $pattern
+     * @see Codeception\Module\WebHelper::dontSeeCookieMatches()
+     * @return \Codeception\Maybe
+     */
+    public function dontSeeCookieMatches($pattern) {
+        $this->scenario->addStep(new \Codeception\Step\Assertion('dontSeeCookieMatches', func_get_args()));
         if ($this->scenario->running()) {
             $result = $this->scenario->runStep();
             return new Maybe($result);

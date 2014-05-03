@@ -13,6 +13,7 @@ class_name: WebGuy
 modules:
     enabled:
         - PhpBrowser
+        - WebHelper
         - Db
     config:
         PhpBrowser:

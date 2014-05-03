@@ -16,6 +16,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_OTP                  = '000000';
 	const INVALID_APPLICATION_PASSWORD = 'fake-password';
 	const TABLE_PREFIX                 = 'wp_';
+	const REGEX_AUTH_COOKIE            = '/(wordpress_)([0-9a-zA-Z]){32}/';
+	const REGEX_LOGGED_IN_COOKIE       = '/(wordpress_logged_in_)([0-9a-zA-Z]){32}/';
 
 	/**
 	 * Prompt the tester for a valid one time password
@@ -72,14 +74,14 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		if ( $expect_logged_in ) {
 			$i->see( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
 			// $i->seeCurrentUrlMatches( '^\/wp-admin/' );    // make sure it starts with /wp-admin, but still allow * after that (e.g., ?redirect_to=[foo])		// todo
-			$i->seeCookie( 'wordpress_49d4ab732056d505c2c751e2f7a5d842' );				// todo how to get hash programmatically?
-			$i->seeCookie( 'wordpress_logged_in_49d4ab732056d505c2c751e2f7a5d842' );	// todo also need to validate hash some how? maybe not
+			$i->seeCookieMatches( self::REGEX_AUTH_COOKIE );
+			$i->seeCookieMatches( self::REGEX_LOGGED_IN_COOKIE );
 		} else {
 			$i->dontSee( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
 			$i->seeInCurrentUrl( '/wp-login.php' );
 			$i->dontSeeInCurrentUrl( '/wp-admin/' );
-			$i->dontSeeCookie( 'wordpress_*' );				// todo don't care what hash value is, shouldn't have any wordpress_* cookies set
-			$i->dontSeeCookie( 'wordpress_logged_in_*' );	// todo
+			$i->dontSeeCookieMatches( self::REGEX_AUTH_COOKIE );
+			$i->dontSeeCookieMatches( self::REGEX_LOGGED_IN_COOKIE );
 		}
 	}
 
