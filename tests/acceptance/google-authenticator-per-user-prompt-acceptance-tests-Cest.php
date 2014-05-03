@@ -5,7 +5,7 @@ use \Codeception\Scenario;
 use \PHPUnit_Framework_Assert;
 
 class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
-	protected $valid_otp;
+	protected $valid_otp;	// todo should this just be local in each method?
 
 	const VALID_USER_ID                = 2;
 	const VALID_USERNAME               = '2fa-tester';
@@ -16,8 +16,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_OTP                  = '000000';
 	const INVALID_APPLICATION_PASSWORD = 'fake-password';
 	const TABLE_PREFIX                 = 'wp_';
-	const REGEX_AUTH_COOKIE            = '/(wordpress_)([0-9a-zA-Z]){32}/';
-	const REGEX_LOGGED_IN_COOKIE       = '/(wordpress_logged_in_)([0-9a-zA-Z]){32}/';
+
+	// todo maybe all of those protected methods should be helpers, so that this file only has the actual tests?
 
 	/**
 	 * Prompt the tester for a valid one time password
@@ -58,31 +58,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->fillField( 'user_login', $username );
 		$i->fillField( 'user_pass', $password );
 		$i->click( '#wp-submit' );
-	}
-
-	/**
-	 * Asserts whether the given user is logged in or not.
-	 *
-	 * @param WebGuy $i
-	 * @param string $username
-	 * @param bool   $expect_logged_in
-	 */
-	protected function assert_user_is_logged_in( WebGuy $i, $username, $expect_logged_in ) {
-		// todo this should be a helper, because it makes assertions?
-			// maybe all of these protected methods should be helpers, so that this file only has the actual tests?
-
-		if ( $expect_logged_in ) {
-			$i->see( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
-			// $i->seeCurrentUrlMatches( '^\/wp-admin/' );    // make sure it starts with /wp-admin, but still allow * after that (e.g., ?redirect_to=[foo])		// todo
-			$i->seeCookieMatches( self::REGEX_AUTH_COOKIE );
-			$i->seeCookieMatches( self::REGEX_LOGGED_IN_COOKIE );
-		} else {
-			$i->dontSee( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
-			$i->seeInCurrentUrl( '/wp-login.php' );
-			$i->dontSeeInCurrentUrl( '/wp-admin/' );
-			$i->dontSeeCookieMatches( self::REGEX_AUTH_COOKIE );
-			$i->dontSeeCookieMatches( self::REGEX_LOGGED_IN_COOKIE );
-		}
 	}
 
 	/**
@@ -140,17 +115,17 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$this->login( $i, self::VALID_USERNAME, self::INVALID_PASSWORD );
 		$i->see( sprintf( 'The password you entered for the username %s is incorrect.', self::VALID_USERNAME ), '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
 
 		$this->login( $i, self::INVALID_USERNAME, self::VALID_PASSWORD );
 		$i->see( 'Invalid username.', '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
-		$this->assert_user_is_logged_in( $i, self::INVALID_USERNAME, false );
+		$i->amNotLoggedIn( self::INVALID_USERNAME );
 		
 		$this->login( $i, self::INVALID_USERNAME, self::INVALID_PASSWORD );
 		$i->see( 'Invalid username.', '#login_error' );
 		$i->seeInCurrentUrl( 'wp-login.php' );
-		$this->assert_user_is_logged_in( $i, self::INVALID_USERNAME, false );
+		$i->amNotLoggedIn( self::INVALID_USERNAME );
 	}
 	
 	/**
@@ -174,7 +149,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->wantTo( 'Log in when 2FA is disabled.' );
 
 		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, true );
+		$i->amLoggedIn( self::VALID_USERNAME );
 	}
 
 	/**
@@ -206,10 +181,10 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$this->enable_2fa( $i, self::VALID_USER_ID );
 		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
 		$this->send_otp( $i, $this->valid_otp );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, true );
+		$i->amLoggedIn( self::VALID_USERNAME );
 	}
 
 	/**
@@ -244,15 +219,15 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$this->enable_2fa( $i, self::VALID_USER_ID );
 		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
 
 		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
 		if ( $scenario->running() ) {
-			sleep( 60 * 3 + 1 );
+			sleep( 16 );    /* requires an mu-plugin callback setup for the gapup_nonce_expiration filter which returns 15 seconds. otherwise would have to wait 3 minutes while running tests */
 		}
 		$this->send_otp( $i, $this->valid_otp );
 
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
 	}
 
@@ -287,10 +262,10 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$this->enable_2fa( $i, self::VALID_USER_ID );
 		$this->login( $i, self::VALID_USERNAME, self::VALID_PASSWORD, $redirect_to );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, false );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$this->prompt_for_valid_otp( $i, $scenario, self::VALID_USERNAME );
 		$this->send_otp( $i, $this->valid_otp );
-		$this->assert_user_is_logged_in( $i, self::VALID_USERNAME, true );
+		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeCurrentUrlEquals( $redirect_to );
 	}
 

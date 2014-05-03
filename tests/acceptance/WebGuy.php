@@ -2065,7 +2065,7 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
-     * Asserts that a cookie matching $pattern exists
+     * Asserts that a cookie matching $pattern exists.
 	 *
 	 * @param string $pattern
     * Conditional Assertion: Test won't be stopped on fail
@@ -2085,7 +2085,7 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
-     * Asserts that a cookie matching $pattern exists
+     * Asserts that a cookie matching $pattern exists.
 	 *
 	 * @param string $pattern
      * @see Codeception\Module\WebHelper::seeCookieMatches()
@@ -2106,7 +2106,7 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
-     * Asserts that no cookies matching $pattern exist
+     * Asserts that no cookies matching $pattern exist.
 	 *
 	 * @param string $pattern
     * Conditional Assertion: Test won't be stopped on fail
@@ -2126,7 +2126,7 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
-     * Asserts that no cookies matching $pattern exist
+     * Asserts that no cookies matching $pattern exist.
 	 *
 	 * @param string $pattern
      * @see Codeception\Module\WebHelper::dontSeeCookieMatches()
@@ -2134,6 +2134,48 @@ class WebGuy extends \Codeception\AbstractGuy
      */
     public function dontSeeCookieMatches($pattern) {
         $this->scenario->addStep(new \Codeception\Step\Assertion('dontSeeCookieMatches', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that the user is logged in.
+	 *
+	 * @param string $username
+     * @see Codeception\Module\WebHelper::amLoggedIn()
+     * @return \Codeception\Maybe
+     */
+    public function amLoggedIn($username) {
+        $this->scenario->addStep(new \Codeception\Step\Condition('amLoggedIn', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that the user is not logged in.
+	 *
+	 * @param string $username
+     * @see Codeception\Module\WebHelper::amNotLoggedIn()
+     * @return \Codeception\Maybe
+     */
+    public function amNotLoggedIn($username) {
+        $this->scenario->addStep(new \Codeception\Step\Condition('amNotLoggedIn', func_get_args()));
         if ($this->scenario->running()) {
             $result = $this->scenario->runStep();
             return new Maybe($result);

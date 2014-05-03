@@ -1,11 +1,15 @@
 # High priority
 
 * Build automated acceptance tests
-	* Figure out how to test auth cookies
 * login_user() - need to save their rememberme setting, otherwise it gets wiped out
 	* add acceptance tests before writing
-* Get code coverage working for acceptance tests
+
+
+# Medium priority
+
 * Internationalize
+	* Can tag 1.0 after this since it's stable and feature-complete
+* Get code coverage working for acceptance tests
 
 
 # Low priority

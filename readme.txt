@@ -48,6 +48,9 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 
 == Changelog ==
 
+= v0.5 () =
+* [NEW] Added an automated acceptance test suite. Alliteration FTW!
+
 = v0.4 (2013-12-30) =
 * [UPDATE] Added support for new application password format in Google Authenticator 0.45
 
@@ -62,6 +65,9 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 
 
 == Upgrade Notice ==
+
+= 0.5 =
+[todo]
 
 = 0.4 =
 This version adds support for the new application password format that will be used in Google Authenticator 0.45.
