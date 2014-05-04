@@ -2109,6 +2109,27 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
+     * Enable the Application Password setting for the given account.
+	 *
+	 * @param int $user_id
+     * @see Codeception\Module\WebHelper::enableApplicationPassword()
+     * @return \Codeception\Maybe
+     */
+    public function enableApplicationPassword($user_id) {
+        $this->scenario->addStep(new \Codeception\Step\Action('enableApplicationPassword', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
      * Send a one-time password to the 2FA token prompt.
 	 *
 	 * @param string $otp

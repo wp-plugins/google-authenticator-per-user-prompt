@@ -10,7 +10,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const VALID_USER_ID                = 2;
 	const VALID_USERNAME               = '2fa-tester';
 	const VALID_PASSWORD               = 'password';
-	const VALID_APPLICATION_PASSWORD   = 'application-password';
+	const VALID_APPLICATION_PASSWORD   = 'CH3L DSW4 DO7Z 3SKJ';
 	const INVALID_USERNAME             = 'fake-user';
 	const INVALID_PASSWORD             = 'fake-password';
 	const INVALID_OTP                  = '000000';
@@ -340,10 +340,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * Attempt to bypass the username/password form by visiting the 2FA form directly without any nonce.
 	 *
 	 * Conditions:
-	 *     2FA status is:         Enabled
-	 *     Username/password are: N/A
-	 *     OTP is:                N/A
-	 *     Nonce is:              Invalid
+	 *     2FA status is:                  Enabled
+	 *     Application password status is: Disabled
+	 *     Username/password are:          N/A
+	 *     OTP is:                         N/A
+	 *     Nonce is:                       Invalid
 	 *
 	 * Action:           Visit the 2FA form directly without any nonce.
 	 * Expected results: The user is not logged in.
@@ -367,16 +368,47 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->dontSee( 'Google Authenticator code' );
 	}
 
+	/**
+	 * Attempt to login to the web interface with a valid application password.
+	 *
+	 * Conditions:
+	 *     2FA status is:                     Enabled
+	 *     Application password status is:    Enabled
+	 *     Username/application password are: Valid
+	 *     OTP is:                            N/A
+	 *     Nonce is:                          N/A
+	 *
+	 * Action:           Send valid username/application password to the web interface.
+	 * Expected results: The user is not logged in.
+	 *                   The user is redirected to the username/password form.
+	 *
+	 * @group 2fa_enabled
+	 * @group application_password_enabled
+	 * @group valid_username_application_password
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_to_web_interface_with_valid_application_password( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Login to the web interface with a valid application password.' );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->enableApplicationPassword( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::VALID_APPLICATION_PASSWORD );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
+		$i->see( 'The password you entered for the username '. self::VALID_USERNAME .' is incorrect.', '#login_error' );
+
+		// todo may need to revisit this and make sure it's actually testing correctly once get the opposite test setup and working
+	}
+
 	/*
 	 * @todo
 	 * Cases to add:
 	 *
-	 * User enters correct application password using XMLRPC      => Logged in, bypasses 2FA token
-	 * User enters correct application password using web         => Redirected to login form
-	 * User A enters correct token, then User B enters same token => Redirected to 2FA form, shown error
-	 *
-	 * To check if auth cookies are sent after entering username/password but before entering the 2FA token:
-	 * curl -i --data "log=username&pwd=password&wp-submit=Log+In&testcookie=1" --cookie "wordpress_test_cookie=WP+Cookie+check" http://example.org/wp-login.php
-	 * webguy probably has a method for that instead
+	 * User enters correct application password using XMLRPC        => Logged in, bypasses 2FA token. create $i->loginXmlRpc() helper
+	 * Enter valid application password w/ app pwd setting disabled => Not logged in
+	 * User A enters correct token, then User B enters same token   => Redirected to 2FA form, shown error
+	 * Check 'remember me' box                                      => Gets extra cookie or whatever
+	 * Doesn't check 'remember me' box                              => Doesn't get extra cookie or whatever
 	 */
 }

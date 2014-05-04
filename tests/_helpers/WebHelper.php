@@ -51,6 +51,25 @@ class WebHelper extends \Codeception\Module {
 	}
 
 	/**
+	 * Enable the Application Password setting for the given account.
+	 *
+	 * @param int $user_id
+	 */
+	public function enableApplicationPassword( $user_id ) {
+		/** @var $i Db */
+		$i = $this->getModule( 'Db' );
+
+		$i->haveInDatabase(
+			self::TABLE_PREFIX . 'usermeta',
+			array(
+				'user_id'    => $user_id,
+				'meta_key'   => 'googleauthenticator_pwdenabled',
+				'meta_value' => 'enabled'
+			)
+		);
+	}
+
+	/**
 	 * Send a one-time password to the 2FA token prompt.
 	 *
 	 * @param string $otp

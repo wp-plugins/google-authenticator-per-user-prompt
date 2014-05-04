@@ -410,7 +410,6 @@ VALUES
 	(129,2,'googleauthenticator_description','wp.dev 2fa-tester'),
 	(130,2,'googleauthenticator_relaxedmode','disabled'),
 	(131,2,'googleauthenticator_secret','FSFMTBLXN52ALUSY'),
-	(132,2,'googleauthenticator_pwdenabled','disabled'),
 	(134,2,'googleauthenticator_lasttimeslot','46618788');
 
 /*!40000 ALTER TABLE `wp_usermeta` ENABLE KEYS */;
