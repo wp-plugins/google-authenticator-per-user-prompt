@@ -1,15 +1,17 @@
 <?php
 
 /*
- * This class unhooks Google Authenticator's normal login form workflow, and replaces it with one that separates the 2FA token request
- * into a second step, so that only users who have 2FA enabled will be prompted for it.
+ * This class unhooks Google Authenticator's normal login form workflow, and replaces it with one that separates
+ * the 2FA token request into a second step, so that only users who have 2FA enabled will be prompted for it.
  * 
  * The process flows like this:
  * 1) A user enters a valid username and password
- * 2) If they don't have 2FA enabled, of if they're using an application password, they're logged in like normal and skip the remaining steps.
+ * 2) If they don't have 2FA enabled, of if they're using an application password, they're logged in like normal
+ *    and skip the remaining steps.
  *    If they do have 2FA enabled, they continue to the next step.
  * 3) We create a nonce and store it in their usermeta
- * 4) Before they are logged in and sent auth cookies, we redirect them to a form prompting them for the 2FA token. The nonce is passed in the URL parameters.
+ * 4) Before they are logged in and sent auth cookies, we redirect them to a form prompting them for the 2FA
+ *    token. The nonce is passed in the URL parameters.
  * 5) If they supply the correct nonce and token, we log them in and redirect them to their original destination.
  */
 
@@ -44,9 +46,12 @@ class Google_Authenticator_Per_User_Prompt {
 	/**
 	 * Checks if the submitted password was a valid application password.
 	 *
-	 * This is basically copied from GoogleAuthenticator::check_opt(), so it'll need to be kept in sync if changes are ever made over there
-	 * See process_token_form() for why this is necessary, instead of just relying on check_otp()
-	 * This is called by the 'authenticate' filter, while WordPress is processing a submitted username/password from the login form
+	 * This is basically copied from GoogleAuthenticator::check_opt(), so it'll need to be kept in sync if changes
+	 * are ever made over there. See process_token_form() for why this is necessary, instead of just relying on
+	 * check_otp().
+	 *
+	 * This is called by the 'authenticate' filter, while WordPress is processing a submitted username/password
+	 * from the login form.
 	 *
 	 * @todo Google Authenticator started migrating from sha1() to wp_hash_password() in r830429-plugins.
 	 * Once it removes SHA1 support, then you should do the same here.
@@ -129,12 +134,12 @@ class Google_Authenticator_Per_User_Prompt {
 	/**
 	 * Renders the form that prompts the user for their 2FA token, and handles the submitted form.
 	 *
-	 * Is called during the login_form_gapup_token action, when the user is redirect to the [login_url]?action=gapup_token screen,
-	 * after entering a correct username/password.
+	 * Is called during the login_form_gapup_token action, when the user is redirect to the
+	 * [login_url]?action=gapup_token screen, after entering a correct username/password.
 	 *
-	 * The user can also access this by directly visiting [login_url]?action=gapup_token&user_id=[id], which would let them
-	 * attempt to bypass entering a username/password, so we detect that they didn't provide a valid nonce and redirect them
-	 * back to the login screen.
+	 * The user can also access this by directly visiting [login_url]?action=gapup_token&user_id=[id], which would
+	 * let them attempt to bypass entering a username/password, so we detect that they didn't provide a valid
+	 * nonce and redirect them back to the login screen.
 	 */
 	public function prompt_for_token() {
 		$redirect_to = isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '';
