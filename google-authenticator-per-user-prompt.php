@@ -42,7 +42,8 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Checks if the submitted password was a valid application password
+	 * Checks if the submitted password was a valid application password.
+	 *
 	 * This is basically copied from GoogleAuthenticator::check_opt(), so it'll need to be kept in sync if changes are ever made over there
 	 * See process_token_form() for why this is necessary, instead of just relying on check_otp()
 	 * This is called by the 'authenticate' filter, while WordPress is processing a submitted username/password from the login form
@@ -73,10 +74,12 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Redirects the user to the token prompt if they have 2FA enabled
+	 * Redirects the user to the token prompt if they have 2FA enabled.
+	 *
 	 * If they don't have 2FA enabled, this does nothing and they proceed to the Administration Panels like normal
-	 * Login attempts with an application password are also allowed to bypass 2FA
-	 * This is called during the authenticate filter, after the user has entered a username/password
+	 * Login attempts with an application password are also allowed to bypass 2FA.
+	 *
+	 * This is called during the authenticate filter, after the user has entered a username/password.
 	 * 
 	 * @param  mixed   $user
 	 * @param  string  $username
@@ -104,8 +107,10 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Creates a nonce when the user successfully logs in with a username and password
-	 * If they later supply this when entering a correct 2FA token, then we can know that they previously logged in with a correct username/password
+	 * Creates a nonce when the user successfully logs in with a username and password.
+	 *
+	 * If they later supply this when entering a correct 2FA token, then we can know that they previously logged
+	 * in with a correct username/password.
 	 *
 	 * @param $user_id
 	 * @return array|bool
@@ -122,10 +127,14 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Renders the form that prompts the user for their 2FA token, and handles the submitted form
-	 * Is called during the login_form_gapup_token action, when the user is redirect to the [login_url]?action=gapup_token screen, after entering a correct username/password.
-	 * The user can also access this by directly visiting [login_url]?action=gapup_token&user_id=[id], which would let them attempt to bypass entering a username/password, 
-	 * so we detect that they didn't provide a valid nonce and redirect them back to the login screen.
+	 * Renders the form that prompts the user for their 2FA token, and handles the submitted form.
+	 *
+	 * Is called during the login_form_gapup_token action, when the user is redirect to the [login_url]?action=gapup_token screen,
+	 * after entering a correct username/password.
+	 *
+	 * The user can also access this by directly visiting [login_url]?action=gapup_token&user_id=[id], which would let them
+	 * attempt to bypass entering a username/password, so we detect that they didn't provide a valid nonce and redirect them
+	 * back to the login screen.
 	 */
 	public function prompt_for_token() {
 		$redirect_to = isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '';
@@ -148,9 +157,11 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Process the submitted 2FA token form
-	 * The user's submitted password isn't passed to check_otp() because we would need a way to securely store it in plaintext between the time it was entered and
-	 * when we use it here. Because of this, check_otp() won't authenticate application passwords, so we're checking for those in maybe_prompt_for_token() instead.
+	 * Process the submitted 2FA token form.
+	 *
+	 * The user's submitted password isn't passed to check_otp() because we would need a way to securely store it
+	 * in plaintext between the time it was entered and when we use it here. Because of this, check_otp() won't
+	 * authenticate application passwords, so we're checking for those in maybe_prompt_for_token() instead.
 	 * 
 	 * @param  array   $form
 	 * @param  WP_User $user
@@ -175,8 +186,9 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 	
 	/**
-	 * Logs the user in
-	 * This is called after the user has successfully entered a token
+	 * Logs the user in.
+	 *
+	 * This is called after the user has successfully entered a token.
 	 */
 	protected function login_user( $user ) {
 		remove_action( 'wp_login',  array( $this, 'maybe_prompt_for_token' ), 10, 2 );	// otherwise the user would be logged out and redirected back to the token form
@@ -196,11 +208,14 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Verifies that the user logged in with a valid username/password earlier in their login attempt
-	 * If we didn't do this, someone could just visit the 2FA form directly, then enter a correct 2FA token and bypass the username/password check
-	 * We're intentionally not checking if the $user passed in is already a WP_User, because they shouldn't be submitting a username/password or
-	 * have auth cookies at this point in the process.
-	 * This is called after the user enters a correct 2FA token
+	 * Verifies that the user logged in with a valid username/password earlier in their login attempt.
+	 *
+	 * If we didn't do this, someone could just visit the 2FA form directly, then enter a correct 2FA token and
+	 * bypass the username/password check. We're intentionally not checking if the $user passed in is already a
+	 * WP_User, because they shouldn't be submitting a username/password or have auth cookies at this point in
+	 * the process.
+	 *
+	 * This is called after the user enters a correct 2FA token.
 	 * 
 	 * @param WP_User $user
 	 * @param string  $username
@@ -225,7 +240,9 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Verify that the nonce the user submitted matches the one we gave them when they logged in, and that it hasn't expired 
+	 * Verify the user submitted nonce.
+	 *
+	 * It must match the one we gave them when they logged in, and it can't have expired since we issued it.
 	 * 
 	 * @param  int    $user_id
 	 * @param  string $attempted_nonce
@@ -244,7 +261,7 @@ class Google_Authenticator_Per_User_Prompt {
 	}
 
 	/**
-	 * Adds error messages to the username/password screen when they were passed by URL parameters
+	 * Adds error messages to the username/password screen when they were passed by URL parameters.
 	 * 
 	 * @param  WP_Error $errors
 	 * @return WP_Error
