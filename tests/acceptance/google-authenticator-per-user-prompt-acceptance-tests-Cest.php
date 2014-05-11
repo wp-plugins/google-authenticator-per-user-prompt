@@ -425,6 +425,33 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	}
 
 	/**
+	 * Attempt to login to the XML-RPC interface when application passwords are disabled.
+	 *
+	 * Conditions:
+	 *     2FA status is:                     Enabled
+	 *     Application password status is:    Disabled
+	 *     Username/application password are: Valid
+	 *     OTP is:                            N/A
+	 *     Nonce is:                          N/A
+	 *
+	 * Action:           Send valid username/application password to the XML-RPC interface.
+	 * Expected results: The user is not logged in.
+	 *
+	 * @group 2fa_enabled
+	 * @group application_password_disabled
+	 * @group valid_username_application_password
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_to_xmlrpc_interface_when_application_passwords_disabled( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Login to the XML-RPC interface when application passwords are disabled.' );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->cantLogInToXmlRpc( self::VALID_USERNAME, self::VALID_APPLICATION_PASSWORD );
+	}
+
+	/**
 	 * Attempt to login to the web interface with a valid application password.
 	 *
 	 * Conditions:
@@ -461,7 +488,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * @todo
 	 * Cases to add:
 	 *
-	 * Enter valid application password w/ app pwd setting disabled => Not logged in
 	 * Login to XML-RPC with invalid username/password              => Not logged in
 	 * User A enters correct token, then User B enters same token   => Redirected to 2FA form, shown error
 	 * Check 'remember me' box                                      => Gets extra cookie or whatever
