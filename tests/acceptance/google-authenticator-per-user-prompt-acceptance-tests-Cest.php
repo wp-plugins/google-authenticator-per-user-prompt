@@ -480,16 +480,44 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->login( self::VALID_USERNAME, self::VALID_APPLICATION_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'The password you entered for the username '. self::VALID_USERNAME .' is incorrect.', '#login_error' );
+	}
 
-		// todo may need to revisit this and make sure it's actually testing correctly once get the opposite test setup and working
+	/**
+	 * Attempt to login to the web interface with an invalid application password.
+	 *
+	 * Conditions:
+	 *     2FA status is:                     Enabled
+	 *     Application password status is:    Enabled
+	 *     Username/application password are: Invalid
+	 *     OTP is:                            N/A
+	 *     Nonce is:                          N/A
+	 *
+	 * Action:           Send invalid username/application password to the web interface.
+	 * Expected results: The user is not logged in.
+	 *                   The user is redirected to the username/password form.
+	 *
+	 * @group 2fa_enabled
+	 * @group application_password_enabled
+	 * @group invalid_username_application_password
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_to_web_interface_with_invalid_application_password( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Login to the web interface with an invalid application password.' );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->enableApplicationPassword( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::INVALID_APPLICATION_PASSWORD );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
+		$i->see( 'The password you entered for the username '. self::VALID_USERNAME .' is incorrect.', '#login_error' );
 	}
 
 	/*
 	 * @todo
 	 * Cases to add:
 	 *
-	 * Login to XML-RPC with invalid username/password              => Not logged in
-	 * User A enters correct token, then User B enters same token   => Redirected to 2FA form, shown error
+	 * User A enters correct token, then User B enters same token   => User A logged in, user B Redirected to 2FA form, shown error
 	 * Check 'remember me' box                                      => Gets extra cookie or whatever
 	 * Doesn't check 'remember me' box                              => Doesn't get extra cookie or whatever
 	 */
