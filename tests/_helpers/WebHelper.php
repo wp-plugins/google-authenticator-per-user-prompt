@@ -98,6 +98,8 @@ class WebHelper extends \Codeception\Module {
 		$found   = false;
 		$cookies = $this->getModule( 'PhpBrowser' )->session->getDriver()->getClient()->getCookieJar()->all();
 
+		$this->debug( print_r( $cookies, true ) );
+
 		foreach( $cookies as $cookie ) {
 			if ( preg_match( $pattern, $cookie->getName() ) ) {
 				$found = true;
@@ -161,16 +163,29 @@ class WebHelper extends \Codeception\Module {
 	}
 
 	/**
-	 * Send an XML-RPC login request with the given username and password.
-	 *
-	 * Since logging in is built into every XML-RPC request that requires authentication, we use the
-	 * wp.getUsersBlogs method as a test of whether or not the login was successful.
+	 * Asserts that the user can log into the XML-RPC interface with the given username and password.
 	 *
 	 * @param string $username
 	 * @param string $password
 	 */
-	public function loginXmlRpc( $username, $password ) {
+	public function canLogInToXmlRpc( $username, $password ) {
+		$this->assertTrue( $this->loginXmlRpc( $username, $password ) );
+	}
+
+	/**
+	 * Attempts to login to the XML-RPC interface with the given username and password.
+	 *
+	 * Since logging-in is built into every XML-RPC request that requires authentication rather than being done
+	 * once at the beginning of a session, we use the wp.getUsersBlogs method as a test of whether or not the
+	 * login was successful.
+	 *
+	 * @param string $username
+	 * @param string $password
+	 * @return bool
+	 */
+	protected function loginXmlRpc( $username, $password ) {
 		/** @var $response Message\Response */
+		$logged_in = true;
 
 		$request_body = sprintf( '
 			<?xml version="1.0" ?>
@@ -190,15 +205,21 @@ class WebHelper extends \Codeception\Module {
 			$password
 		);
 
+		$expected_response_strings = array(
+			'<name>isAdmin</name><value><boolean>0</boolean></value>',
+			'<name>blogName</name><value><string>General WordPress Sandbox</string></value>',
+		);
+
 		$response      = $this->sendHttpRequest( 'POST', 'xmlrpc.php', array(), $request_body, array() );
+		$response_body = $response->getBody( true );
 
-		// todo assert that response was valid
+		foreach ( $expected_response_strings as $needle ) {
+			if ( false === strpos( $response_body, $needle ) ) {
+				$logged_in = false;
+			}
+		}
 
-		$response_body = $this->convertXmlRpcResponseToAssociativeArray( $response->getBody( true ) );
-
-		$this->assertTrue( isset( $response_body['isAdmin'], $response_body['blogName'] ) );
-		$this->assertEquals( $response_body['isAdmin'],  0 );
-		$this->assertEquals( $response_body['blogName'], 'General WordPress Sandbox' );
+		return $logged_in;
 	}
 
 	/**
@@ -224,39 +245,9 @@ class WebHelper extends \Codeception\Module {
 			}
 		);
 
+		$this->debug( $response->getRawHeaders() );
+		$this->debug( $response->getBody( true ) );
+
 		return $response;
-	}
-
-	/**
-	 * Convert a response from WordPress' XML-RPC handler to an associative array.
-	 *
-	 * Because dealing with SimpleXML is a pain in the ass, and it's better to just do it once here than in all of
-	 * the methods that have to inspect a response.
-	 *
-	 * @todo This may need to be made more generic in the future to handle differently structured responses. Maybe
-	 *       some kind of recursive json_decode( json_encode( $xml ) ) loop.
-	 *
-	 * @param $response_body
-	 * @return array
-	 */
-	protected function convertXmlRpcResponseToAssociativeArray( $response_body ) {
-		$items             = array();
-		$response_body_xml = simplexml_load_string( $response_body );
-
-		if ( isset( $response_body_xml->params->param->value->array->data->value->struct->member ) ) {
-			foreach( $response_body_xml->params->param->value->array->data->value->struct->member as $member ) {
-				foreach( $member->value as $value ) {
-					$name = (string) $member->name;
-
-					if ( isset( $value->string ) ) {
-						$items[ $name ] = (string) $value->string;
-					} elseif ( isset( $value->boolean ) ) {
-						$items[ $name ] = (string) $value->boolean;
-					}
-				}
-			}
-		}
-
-		return $items;
 	}
 }

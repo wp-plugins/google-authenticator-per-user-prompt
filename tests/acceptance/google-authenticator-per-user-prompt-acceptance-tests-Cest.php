@@ -385,8 +385,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * @group application_password_enabled
 	 * @group valid_username_application_password
 	 *
-	 * @group todo
-	 *
 	 * @param WebGuy   $i
 	 * @param Scenario $scenario
 	 */
@@ -395,15 +393,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->enableApplicationPassword( self::VALID_USER_ID );
-		$i->loginXmlRpc( self::VALID_USERNAME, self::VALID_APPLICATION_PASSWORD );
-
-		// todo need some test to check if worked, but right now there's in loginXmlRpc()
-			// should be here to match convention, and also b/c will want to test that it failed w/ bad password
-
-		//$i->amNotLoggedIn( self::VALID_USERNAME );
-		//$i->see( 'The password you entered for the username '. self::VALID_USERNAME .' is incorrect.', '#login_error' );
-
-		// todo may need to revisit this and make sure it's actually testing correctly once get the opposite test setup and working
+		$i->canLogInToXmlRpc( self::VALID_USERNAME, self::VALID_APPLICATION_PASSWORD );
 	}
 
 	/**

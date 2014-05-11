@@ -2275,18 +2275,15 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
-     * Send an XML-RPC login request with the given username and password.
-	 *
-	 * Since logging in is built into every XML-RPC request that requires authentication, we use the
-	 * wp.getUsersBlogs method as a test of whether or not the login was successful.
+     * Asserts that the user can log into the XML-RPC interface with the given username and password.
 	 *
 	 * @param string $username
 	 * @param string $password
-     * @see Codeception\Module\WebHelper::loginXmlRpc()
+     * @see Codeception\Module\WebHelper::canLogInToXmlRpc()
      * @return \Codeception\Maybe
      */
-    public function loginXmlRpc($username, $password) {
-        $this->scenario->addStep(new \Codeception\Step\Action('loginXmlRpc', func_get_args()));
+    public function canLogInToXmlRpc($username, $password) {
+        $this->scenario->addStep(new \Codeception\Step\Action('canLogInToXmlRpc', func_get_args()));
         if ($this->scenario->running()) {
             $result = $this->scenario->runStep();
             return new Maybe($result);
