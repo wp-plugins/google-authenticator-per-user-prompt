@@ -2275,7 +2275,7 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
-     * Asserts that the user can log into the XML-RPC interface with the given username and password.
+     * Asserts that the user can login to the XML-RPC interface with the given username and password.
 	 *
 	 * @param string $username
 	 * @param string $password
@@ -2284,6 +2284,28 @@ class WebGuy extends \Codeception\AbstractGuy
      */
     public function canLogInToXmlRpc($username, $password) {
         $this->scenario->addStep(new \Codeception\Step\Action('canLogInToXmlRpc', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that the user can't login to the XML-RPC interface with the given username and password.
+	 *
+	 * @param string $username
+	 * @param string $password
+     * @see Codeception\Module\WebHelper::cantLogInToXmlRpc()
+     * @return \Codeception\Maybe
+     */
+    public function cantLogInToXmlRpc($username, $password) {
+        $this->scenario->addStep(new \Codeception\Step\Action('cantLogInToXmlRpc', func_get_args()));
         if ($this->scenario->running()) {
             $result = $this->scenario->runStep();
             return new Maybe($result);

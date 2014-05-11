@@ -397,6 +397,34 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	}
 
 	/**
+	 * Attempt to login to the XML-RPC interface with an invalid application password.
+	 *
+	 * Conditions:
+	 *     2FA status is:                     Enabled
+	 *     Application password status is:    Enabled
+	 *     Username/application password are: Invalid
+	 *     OTP is:                            N/A
+	 *     Nonce is:                          N/A
+	 *
+	 * Action:           Send invalid username/application password to the XML-RPC interface.
+	 * Expected results: The user is not logged in.
+	 *
+	 * @group 2fa_enabled
+	 * @group application_password_enabled
+	 * @group invalid_username_application_password
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_to_xmlrpc_interface_with_invalid_application_password( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Login to the XML-RPC interface with an invalid application password.' );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->enableApplicationPassword( self::VALID_USER_ID );
+		$i->cantLogInToXmlRpc( self::VALID_USERNAME, self::INVALID_APPLICATION_PASSWORD );
+	}
+
+	/**
 	 * Attempt to login to the web interface with a valid application password.
 	 *
 	 * Conditions:

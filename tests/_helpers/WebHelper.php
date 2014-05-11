@@ -163,13 +163,23 @@ class WebHelper extends \Codeception\Module {
 	}
 
 	/**
-	 * Asserts that the user can log into the XML-RPC interface with the given username and password.
+	 * Asserts that the user can login to the XML-RPC interface with the given username and password.
 	 *
 	 * @param string $username
 	 * @param string $password
 	 */
 	public function canLogInToXmlRpc( $username, $password ) {
 		$this->assertTrue( $this->loginXmlRpc( $username, $password ) );
+	}
+
+	/**
+	 * Asserts that the user can't login to the XML-RPC interface with the given username and password.
+	 *
+	 * @param string $username
+	 * @param string $password
+	 */
+	public function cantLogInToXmlRpc( $username, $password ) {
+		$this->assertFalse( $this->loginXmlRpc( $username, $password ) );
 	}
 
 	/**
