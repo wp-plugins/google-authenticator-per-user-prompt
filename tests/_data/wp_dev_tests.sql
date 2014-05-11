@@ -406,7 +406,7 @@ VALUES
 	(122,2,'wp_capabilities','a:1:{s:11:"contributor";b:1;}'),
 	(123,2,'wp_user_level','0'),
 	(124,2,'dismissed_wp_pointers','wp350_media,wp360_revisions,wp360_locks,wp390_widgets'),
-	(127,2,'googleauthenticator_passwords','{\"appname\":\"Default\",\"password\":\"$P$BjBT3Yj1/ekXtwBo6cGwpcmHjNy3H6/\"}'),
+	(127,2,'googleauthenticator_passwords','{\"appname\":\"Default\",\"password\":\"$P$BQ9vFJHMs.yHLQuYov2fAFdWRZQKB41\"}'),
 	(129,2,'googleauthenticator_description','wp.dev 2fa-tester'),
 	(130,2,'googleauthenticator_relaxedmode','disabled'),
 	(131,2,'googleauthenticator_secret','FSFMTBLXN52ALUSY'),

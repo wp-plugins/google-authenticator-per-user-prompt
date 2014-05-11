@@ -2,7 +2,9 @@
 namespace Codeception\Module;
 
 use Guzzle\Common\Exception\ExceptionCollection;
+use Guzzle\Http\Message;
 use Symfony\Component\BrowserKit\Cookie;
+use Symfony\Component\DependencyInjection\SimpleXMLElement;
 
 class WebHelper extends \Codeception\Module {
 	const TABLE_PREFIX           = 'wp_';
@@ -156,5 +158,105 @@ class WebHelper extends \Codeception\Module {
 		$i->dontSee( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
 		$i->seeInCurrentUrl( '/wp-login.php' );
 		$i->dontSeeInCurrentUrl( '/wp-admin/' );	// todo redirect_to fail? is this even needed?
+	}
+
+	/**
+	 * Send an XML-RPC login request with the given username and password.
+	 *
+	 * Since logging in is built into every XML-RPC request that requires authentication, we use the
+	 * wp.getUsersBlogs method as a test of whether or not the login was successful.
+	 *
+	 * @param string $username
+	 * @param string $password
+	 */
+	public function loginXmlRpc( $username, $password ) {
+		/** @var $response Message\Response */
+
+		$request_body = sprintf( '
+			<?xml version="1.0" ?>
+			<methodCall>
+				<methodName>wp.getUsersBlogs</methodName>
+				<params>
+					<param>
+						<value>%s</value>
+					</param>
+
+					 <param>
+						 <value>%s</value>
+					</param>
+				</params>
+			</methodCall>',
+			$username,
+			$password
+		);
+
+		$response      = $this->sendHttpRequest( 'POST', 'xmlrpc.php', array(), $request_body, array() );
+
+		// todo assert that response was valid
+
+		$response_body = $this->convertXmlRpcResponseToAssociativeArray( $response->getBody( true ) );
+
+		$this->assertTrue( isset( $response_body['isAdmin'], $response_body['blogName'] ) );
+		$this->assertEquals( $response_body['isAdmin'],  0 );
+		$this->assertEquals( $response_body['blogName'], 'General WordPress Sandbox' );
+	}
+
+	/**
+	 * Send an HTTP request and return the response.
+	 *
+	 * @param string $method GET | POST
+	 * @param string $url
+	 * @param array  $headers
+	 * @param string $body
+	 * @param array  $options
+	 * @return Message\Response $response
+	 */
+	protected function sendHttpRequest( $method, $url, $headers, $body, $options ) {
+		/** @var $i        PhpBrowser */
+		/** @var $response Message\Response */
+
+		$i   = $this->getModule( 'PhpBrowser' );
+		$url = $i->_getUrl() . $url;
+
+		$response = $i->executeInGuzzle(
+			function( \Guzzle\Http\Client $client ) use ( $method, $url, $headers, $body, $options ) {
+				return $client->send( $client->createRequest( $method, $url, $headers, $body, $options ) );
+			}
+		);
+
+		return $response;
+	}
+
+	/**
+	 * Convert a response from WordPress' XML-RPC handler to an associative array.
+	 *
+	 * Because dealing with SimpleXML is a pain in the ass, and it's better to just do it once here than in all of
+	 * the methods that have to inspect a response.
+	 *
+	 * @todo This may need to be made more generic in the future to handle differently structured responses. Maybe
+	 *       some kind of recursive json_decode( json_encode( $xml ) ) loop.
+	 *
+	 * @param $response_body
+	 * @return array
+	 */
+	protected function convertXmlRpcResponseToAssociativeArray( $response_body ) {
+		$items             = array();
+		$response_body_xml = simplexml_load_string( $response_body );
+
+		if ( isset( $response_body_xml->params->param->value->array->data->value->struct->member ) ) {
+			foreach( $response_body_xml->params->param->value->array->data->value->struct->member as $member ) {
+				foreach( $member->value as $value ) {
+					$name = (string) $member->name;
+
+					if ( isset( $value->string ) ) {
+						$items[ $name ] = (string) $value->string;
+					} elseif ( isset( $value->boolean ) ) {
+						$items[ $name ] = (string) $value->boolean;
+					}
+				}
+			}
+		}
+
+		return $items;
 	}
 }

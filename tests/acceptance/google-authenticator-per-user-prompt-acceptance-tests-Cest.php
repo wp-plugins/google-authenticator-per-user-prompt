@@ -10,14 +10,14 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const VALID_USER_ID                = 2;
 	const VALID_USERNAME               = '2fa-tester';
 	const VALID_PASSWORD               = 'password';
-	const VALID_APPLICATION_PASSWORD   = 'CH3L DSW4 DO7Z 3SKJ';
+	const VALID_APPLICATION_PASSWORD   = 'YUKP HO6T Z5WB QW3N';
 	const INVALID_USERNAME             = 'fake-user';
 	const INVALID_PASSWORD             = 'fake-password';
 	const INVALID_OTP                  = '000000';
 	const INVALID_NONCE                = '00000000000000000000000000000000';
 	const INVALID_APPLICATION_PASSWORD = 'fake-password';
 	const OTP_LIFETIME                 = 61;
-	const NONCE_LIFETIME               = 26;     // Normally 3 minutes, but using a `gapup_nonce_expiration` filter callback that returns 25 seconds so don't have to wait as long.
+	const NONCE_LIFETIME               = 26;	// see ../tests/readme.txt
 
 	/**
 	 * Prompt the tester for a valid one time password
@@ -369,6 +369,44 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	}
 
 	/**
+	 * Attempt to login to the XML-RPC interface with a valid application password.
+	 *
+	 * Conditions:
+	 *     2FA status is:                     Enabled
+	 *     Application password status is:    Enabled
+	 *     Username/application password are: Valid
+	 *     OTP is:                            N/A
+	 *     Nonce is:                          N/A
+	 *
+	 * Action:           Send valid username/application password to the XML-RPC interface.
+	 * Expected results: The user is logged in.
+	 *
+	 * @group 2fa_enabled
+	 * @group application_password_enabled
+	 * @group valid_username_application_password
+	 *
+	 * @group todo
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_to_xmlrpc_interface_with_valid_application_password( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Login to the XML-RPC interface with a valid application password.' );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->enableApplicationPassword( self::VALID_USER_ID );
+		$i->loginXmlRpc( self::VALID_USERNAME, self::VALID_APPLICATION_PASSWORD );
+
+		// todo need some test to check if worked, but right now there's in loginXmlRpc()
+			// should be here to match convention, and also b/c will want to test that it failed w/ bad password
+
+		//$i->amNotLoggedIn( self::VALID_USERNAME );
+		//$i->see( 'The password you entered for the username '. self::VALID_USERNAME .' is incorrect.', '#login_error' );
+
+		// todo may need to revisit this and make sure it's actually testing correctly once get the opposite test setup and working
+	}
+
+	/**
 	 * Attempt to login to the web interface with a valid application password.
 	 *
 	 * Conditions:
@@ -405,8 +443,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * @todo
 	 * Cases to add:
 	 *
-	 * User enters correct application password using XMLRPC        => Logged in, bypasses 2FA token. create $i->loginXmlRpc() helper
 	 * Enter valid application password w/ app pwd setting disabled => Not logged in
+	 * Login to XML-RPC with invalid username/password              => Not logged in
 	 * User A enters correct token, then User B enters same token   => Redirected to 2FA form, shown error
 	 * Check 'remember me' box                                      => Gets extra cookie or whatever
 	 * Doesn't check 'remember me' box                              => Doesn't get extra cookie or whatever
