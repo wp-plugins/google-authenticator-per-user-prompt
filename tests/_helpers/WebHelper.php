@@ -17,8 +17,9 @@ class WebHelper extends \Codeception\Module {
 	 * @param string $username
 	 * @param string $password
 	 * @param string $redirect_to
+	 * @param bool   $remember_me
 	 */
-	public function login( $username, $password, $redirect_to = false ) {
+	public function login( $username, $password, $redirect_to = false, $remember_me = false ) {
 		/** @var $i PhpBrowser */
 		$i = $this->getModule( 'PhpBrowser' );
 
@@ -30,6 +31,11 @@ class WebHelper extends \Codeception\Module {
 		$i->amOnPage( $url );
 		$i->fillField( 'user_login', $username );
 		$i->fillField( 'user_pass', $password );
+
+		if ( $remember_me ) {
+			$i->checkOption( '#rememberme' );
+		}
+
 		$i->click( '#wp-submit' );
 	}
 
@@ -87,12 +93,12 @@ class WebHelper extends \Codeception\Module {
 	}
 
 	/**
-	 * Match a regular expression pattern in a cookie name.
+	 * Determine if any cookie exists whose name matches the given regular expression.
 	 *
 	 * @param string $pattern
 	 * @return bool
 	 */
-	protected function cookieMatches( $pattern ) {
+	protected function anyCookieMatches( $pattern ) {
 		/** @var $cookie Cookie */
 
 		$found   = false;
@@ -101,7 +107,7 @@ class WebHelper extends \Codeception\Module {
 		$this->debug( print_r( $cookies, true ) );
 
 		foreach( $cookies as $cookie ) {
-			if ( preg_match( $pattern, $cookie->getName() ) ) {
+			if ( $this->cookieMatches( $cookie, $pattern ) ) {
 				$found = true;
 				break;
 			}
@@ -111,12 +117,23 @@ class WebHelper extends \Codeception\Module {
 	}
 
 	/**
+	 * Match a regular expression pattern in a cookie name.
+	 *
+	 * @param Cookie $cookie
+	 * @param string $pattern
+	 * @return bool
+	 */
+	protected function cookieMatches( $cookie, $pattern ) {
+		return preg_match( $pattern, $cookie->getName() );
+	}
+
+	/**
 	 * Asserts that a cookie matching $pattern exists.
 	 *
 	 * @param string $pattern
 	 */
 	public function seeCookieMatches( $pattern ) {
-		$this->assertTrue( $this->cookieMatches( $pattern ) );
+		$this->assertTrue( $this->anyCookieMatches( $pattern ) );
 	}
 
 	/**
@@ -125,7 +142,74 @@ class WebHelper extends \Codeception\Module {
 	 * @param string $pattern
 	 */
 	public function dontSeeCookieMatches( $pattern ) {
-		$this->assertFalse( $this->cookieMatches( $pattern ) );
+		$this->assertFalse( $this->anyCookieMatches( $pattern ) );
+	}
+
+	/**
+	 * Asserts that the given user's WordPress authorization cookie expires in the given number of days.
+	 *
+	 * @param int $user_id
+	 * @param int $expected_days
+	 */
+	public function seeAuthCookieExpiresInDays( $user_id, $expected_days ) {
+		/** @var $auth_cookie Cookie */
+
+		$auth_cookie = $this->getAuthCookie();
+		\PHPUnit_Framework_Assert::assertInstanceOf( 'Symfony\Component\BrowserKit\Cookie', $auth_cookie );
+
+		$expiration  = $this->getAuthCookieExpiration( $auth_cookie );
+		$actual_days = round( ( $expiration - time() ) / 60 / 60 / 24 );
+
+		$this->assertEquals( $actual_days, $expected_days );
+	}
+
+	/**
+	 * Pluck the WordPress authorization cookie from the cookie jar.
+	 *
+	 * @return Cookie | false
+	 */
+	protected function getAuthCookie() {
+		/** @var $cookie Cookie */
+
+		$found   = false;
+		$cookies = $this->getModule( 'PhpBrowser' )->session->getDriver()->getClient()->getCookieJar()->all();
+
+		foreach ( $cookies as $cookie ) {
+			if ( $this->cookieMatches( $cookie, self::REGEX_AUTH_COOKIE ) ) {
+				$found = true;
+				break;
+			}
+		}
+
+		if ( $found ) {
+			return $cookie;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Extract the expiration value from a WordPress authorization cookie.
+	 *
+	 * Note that this is the internal expiration timestamp that WordPress stores in the cookie value, not the
+	 * expiration timestamp in the cookie's Expires field.
+	 *
+	 * @param Cookie $auth_cookie
+	 * @return int | false
+	 */
+	protected function getAuthCookieExpiration( $auth_cookie ) {
+		$expiration = $auth_cookie->getValue();
+		$expiration = explode( '|', $expiration );
+
+		if ( isset( $expiration[1] ) ) {
+			$expiration = $expiration[1];
+		}
+
+		if ( is_numeric( $expiration ) && $expiration > 1 ) {
+			return $expiration;
+		} else {
+			return false;
+		}
 	}
 
 	/**
@@ -137,8 +221,8 @@ class WebHelper extends \Codeception\Module {
 		/** @var $i PhpBrowser */
 		$i = $this->getModule( 'PhpBrowser' );
 
-		$this->assertTrue( $this->cookieMatches( self::REGEX_AUTH_COOKIE ) );
-		$this->assertTrue( $this->cookieMatches( self::REGEX_LOGGED_IN_COOKIE ) );
+		$this->assertTrue( $this->anyCookieMatches( self::REGEX_AUTH_COOKIE ) );
+		$this->assertTrue( $this->anyCookieMatches( self::REGEX_LOGGED_IN_COOKIE ) );
 
 		$i->see( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
 		$i->seeInCurrentUrl( '/wp-admin/' );
@@ -154,8 +238,8 @@ class WebHelper extends \Codeception\Module {
 		/** @var $i PhpBrowser */
 		$i = $this->getModule( 'PhpBrowser' );
 
-		$this->assertFalse( $this->cookieMatches( self::REGEX_AUTH_COOKIE ) );
-		$this->assertFalse( $this->cookieMatches( self::REGEX_LOGGED_IN_COOKIE ) );
+		$this->assertFalse( $this->anyCookieMatches( self::REGEX_AUTH_COOKIE ) );
+		$this->assertFalse( $this->anyCookieMatches( self::REGEX_LOGGED_IN_COOKIE ) );
 
 		$i->dontSee( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
 		$i->seeInCurrentUrl( '/wp-login.php' );

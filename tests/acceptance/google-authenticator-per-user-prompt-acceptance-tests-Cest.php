@@ -18,6 +18,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_APPLICATION_PASSWORD = 'fake-password';
 	const OTP_LIFETIME                 = 61;
 	const NONCE_LIFETIME               = 26;	// see ../tests/readme.txt
+	const AUTH_COOKIE_REMEMBERED_DAYS  = 14;
+	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;	// todo whitespace fix
 
 	/**
 	 * Prompt the tester for a valid one time password
@@ -31,6 +33,10 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * @todo This should probably be a helper too, but I'm not sure there'd be a way to access the
 	 * value. It wouldn't be returned, and codeception uses call_user_func(), which won't pass
 	 * by reference.
+	 *
+	 * @todo Wait a minute, can't I calculate this based on the secret? I bet I can. That would be so much better
+	 *       than having to input it every damn time.
+	 *       If then works then maybe can lower NONCE_LIFETIME b/c won't have to wait on you typing.
 	 *
 	 * @param WebGuy   $i
 	 * @param Scenario $scenario
@@ -139,6 +145,82 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
 		$i->sendOtp( $this->valid_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
+	}
+
+	/**
+	 * Login with the 'Remember Me' flag enabled.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Enabled
+	 *     Username/password are: Valid
+	 *     OTP is:                Valid
+	 *     Nonce is:              Valid
+	 *
+	 * Action:           Login with the 'Remember Me' flag enabled.
+	 * Expected results: The user is redirected to the 2FA token prompt screen.
+	 *                   The user is not logged in yet.
+	 * Action:           Send a valid OTP.
+	 * Expected results: The user is redirected to wp-admin
+	 *                   The user is logged in.
+	 *                   The auth cookie expiration has been extended.
+	 *
+	 * @group 2fa_enabled
+	 * @group valid_username_password
+	 * @group valid_otp
+	 * @group valid_nonce
+	 * @group remember_me
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_with_remember_me_enabled( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( "Log in with the 'Remember Me' flag enabled." );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
+		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->valid_otp );
+		$i->amLoggedIn( self::VALID_USERNAME );
+		$i->seeAuthCookieExpiresInDays( self::VALID_USER_ID, self::AUTH_COOKIE_REMEMBERED_DAYS );
+	}
+
+	/**
+	 * Login with the 'Remember Me' flag disabled.
+	 *
+	 * Conditions:
+	 *     2FA status is:         Enabled
+	 *     Username/password are: Valid
+	 *     OTP is:                Valid
+	 *     Nonce is:              Valid
+	 *
+	 * Action:           Login with the 'Remember Me' flag disabled.
+	 * Expected results: The user is redirected to the 2FA token prompt screen.
+	 *                   The user is not logged in yet.
+	 * Action:           Send a valid OTP.
+	 * Expected results: The user is redirected to wp-admin
+	 *                   The user is logged in.
+	 *                   The auth cookie expiration has not been extended.
+	 *
+	 * @group 2fa_enabled
+	 * @group valid_username_password
+	 * @group valid_otp
+	 * @group valid_nonce
+	 * @group remember_me
+	 *
+	 * @param WebGuy   $i
+	 * @param Scenario $scenario
+	 */
+	public function login_with_remember_me_disabled( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( "Log in with the 'Remember Me' flag disabled." );
+
+		$i->enable2fa( self::VALID_USER_ID );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
+		$i->amNotLoggedIn( self::VALID_USERNAME );
+		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->valid_otp );
+		$i->amLoggedIn( self::VALID_USERNAME );
+		$i->seeAuthCookieExpiresInDays( self::VALID_USER_ID, self::AUTH_COOKIE_NOT_REMEMBERED_DAYS );
 	}
 
 	/**

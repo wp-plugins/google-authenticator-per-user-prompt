@@ -2070,10 +2070,11 @@ class WebGuy extends \Codeception\AbstractGuy
 	 * @param string $username
 	 * @param string $password
 	 * @param string $redirect_to
+	 * @param bool   $remember_me
      * @see Codeception\Module\WebHelper::login()
      * @return \Codeception\Maybe
      */
-    public function login($username, $password, $redirect_to = null) {
+    public function login($username, $password, $redirect_to = null, $remember_me = null) {
         $this->scenario->addStep(new \Codeception\Step\Action('login', func_get_args()));
         if ($this->scenario->running()) {
             $result = $this->scenario->runStep();
@@ -2220,6 +2221,49 @@ class WebGuy extends \Codeception\AbstractGuy
      */
     public function dontSeeCookieMatches($pattern) {
         $this->scenario->addStep(new \Codeception\Step\Assertion('dontSeeCookieMatches', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that the given user's WordPress authorization cookie expires in the given number of days.
+	 *
+	 * @param int $user_id
+	 * @param int $expected_days
+    * Conditional Assertion: Test won't be stopped on fail
+     * @see Codeception\Module\WebHelper::seeAuthCookieExpiresInDays()
+     * @return \Codeception\Maybe
+     */
+    public function canSeeAuthCookieExpiresInDays($user_id, $expected_days) {
+        $this->scenario->addStep(new \Codeception\Step\ConditionalAssertion('seeAuthCookieExpiresInDays', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
+     * Asserts that the given user's WordPress authorization cookie expires in the given number of days.
+	 *
+	 * @param int $user_id
+	 * @param int $expected_days
+     * @see Codeception\Module\WebHelper::seeAuthCookieExpiresInDays()
+     * @return \Codeception\Maybe
+     */
+    public function seeAuthCookieExpiresInDays($user_id, $expected_days) {
+        $this->scenario->addStep(new \Codeception\Step\Assertion('seeAuthCookieExpiresInDays', func_get_args()));
         if ($this->scenario->running()) {
             $result = $this->scenario->runStep();
             return new Maybe($result);
