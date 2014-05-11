@@ -7,19 +7,19 @@ use \PHPUnit_Framework_Assert;
 class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	protected $valid_otp;
 
-	const VALID_USER_ID                = 2;
-	const VALID_USERNAME               = '2fa-tester';
-	const VALID_PASSWORD               = 'password';
-	const VALID_APPLICATION_PASSWORD   = 'YUKP HO6T Z5WB QW3N';
-	const INVALID_USERNAME             = 'fake-user';
-	const INVALID_PASSWORD             = 'fake-password';
-	const INVALID_OTP                  = '000000';
-	const INVALID_NONCE                = '00000000000000000000000000000000';
-	const INVALID_APPLICATION_PASSWORD = 'fake-password';
-	const OTP_LIFETIME                 = 61;
-	const NONCE_LIFETIME               = 26;	// see ../tests/readme.txt
-	const AUTH_COOKIE_REMEMBERED_DAYS  = 14;
-	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;	// todo whitespace fix
+	const VALID_USER_ID                   = 2;
+	const VALID_USERNAME                  = '2fa-tester';
+	const VALID_PASSWORD                  = 'password';
+	const VALID_APPLICATION_PASSWORD      = 'YUKP HO6T Z5WB QW3N';
+	const INVALID_USERNAME                = 'fake-user';
+	const INVALID_PASSWORD                = 'fake-password';
+	const INVALID_OTP                     = '000000';
+	const INVALID_NONCE                   = '00000000000000000000000000000000';
+	const INVALID_APPLICATION_PASSWORD    = 'fake-password';
+	const OTP_LIFETIME                    = 61;
+	const NONCE_LIFETIME                  = 26;	// see ../tests/readme.txt
+	const AUTH_COOKIE_REMEMBERED_DAYS     = 14;
+	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
 
 	/**
 	 * Prompt the tester for a valid one time password
