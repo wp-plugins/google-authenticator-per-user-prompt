@@ -5,7 +5,7 @@ use \Codeception\Scenario;
 use \PHPUnit_Framework_Assert;
 
 class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
-	protected $valid_otp;
+	protected $current_otp;
 
 	const VALID_USER_ID                   = 2;
 	const VALID_USERNAME                  = '2fa-tester';
@@ -16,38 +16,57 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_OTP                     = '000000';
 	const INVALID_NONCE                   = '00000000000000000000000000000000';
 	const INVALID_APPLICATION_PASSWORD    = 'fake-password';
-	const OTP_LIFETIME                    = 61;
-	const NONCE_LIFETIME                  = 26;	// see ../tests/readme.txt
+	const OTP_SECRET                      = 'FSFMTBLXN52ALUSY';
+	const OTP_LIFETIME                    = 61;	// todo should actually be 31
+	const NONCE_LIFETIME                  = 26;	// see ../tests/readme.txt	// todo can lower this to ~5 or 10 seconds now? would need to update readme.txt
 	const AUTH_COOKIE_REMEMBERED_DAYS     = 14;
 	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
 
 	/**
-	 * Prompt the tester for a valid one time password
+	 * Generate the current OTP.
 	 *
-	 * Because of the nature of one-time passwords, the test suite can't be fully automated.
-	 * We need to collect a valid token before each test.
+	 * Borrowed heavily from https://www.idontplaydarts.com/2011/07/google-totp-two-factor-authentication-for-php/
 	 *
-	 * Codeception runs each test twice, so we avoid prompting during the analysis phase,
-	 * because the analyzer would never input anything.
+	 * @todo This should be in the helper, but I'm not sure there'd be a way to access the
+	 *       value. It wouldn't be returned, and codeception uses call_user_func(), which won't pass
+	 *       by reference.
+	 *       Probably extract these two functions into a separate class, and just require and call that.
 	 *
-	 * @todo This should probably be a helper too, but I'm not sure there'd be a way to access the
-	 * value. It wouldn't be returned, and codeception uses call_user_func(), which won't pass
-	 * by reference.
-	 *
-	 * @todo Wait a minute, can't I calculate this based on the secret? I bet I can. That would be so much better
-	 *       than having to input it every damn time.
-	 *       If then works then maybe can lower NONCE_LIFETIME b/c won't have to wait on you typing.
-	 *
-	 * @param WebGuy   $i
-	 * @param Scenario $scenario
-	 * @param string   $username
 	 */
-	protected function enterValidOtp( WebGuy $i, Scenario $scenario, $username ) {
-		if ( ! $scenario->running() ) {
-			return;
-		}
+	protected function getCurrentOtp() {
+		require_once( dirname( dirname( dirname( __DIR__ ) ) ) . '/google-authenticator/base32.php' );
 
-		$this->valid_otp = readline( sprintf( "\nEnter the current OTP for %s: ", $username ) );
+		$interval       = 30;	// todo switch to using OTP_LIFETIME, and other references do OTP_LIFETIME + 1
+		$digits         = 6;
+		$secret_binary  = Base32::decode( self::OTP_SECRET );
+		$timecode       = ( time() * 1000 ) / ( $interval * 1000 );
+		$bin_counter    = pack( 'N*', 0 ) . pack( 'N*', $timecode );
+		$hash           = hash_hmac( 'sha1', $bin_counter, $secret_binary, true );
+		$otp            = $this->oathTruncate( $hash, $digits );
+
+		$this->current_otp = str_pad( $otp, $digits, '0', STR_PAD_LEFT );
+	}
+
+	/**
+	 * Extracts the OTP from the SHA1 hash.
+	 *
+	 * Modified from https://www.idontplaydarts.com/2011/07/google-totp-two-factor-authentication-for-php/
+	 *
+	 * @param string $hash
+	 * @param int $digits
+	 * @return integer
+	 */
+	protected function oathTruncate( $hash, $digits ) {
+		$offset = ord( $hash[19] ) & 0xf;
+
+		$code = (
+			( ( ord( $hash[ $offset + 0 ] ) & 0x7f ) << 24 ) |
+			( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
+			( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
+			( ord( $hash[ $offset + 3 ] ) & 0xff )
+		);
+
+		return $code % pow( 10, $digits );
 	}
 
 	/**
@@ -142,8 +161,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->valid_otp );
+		$this->getCurrentOtp();
+		$i->sendOtp( $this->current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 	}
 
@@ -179,8 +198,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->valid_otp );
+		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeAuthCookieExpiresInDays( self::VALID_USER_ID, self::AUTH_COOKIE_REMEMBERED_DAYS );
 	}
@@ -217,8 +236,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->valid_otp );
+		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeAuthCookieExpiresInDays( self::VALID_USER_ID, self::AUTH_COOKIE_NOT_REMEMBERED_DAYS );
 	}
@@ -257,11 +276,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
+		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
 		if ( $scenario->running() ) {
 			sleep( self::NONCE_LIFETIME );
 		}
-		$i->sendOtp( $this->valid_otp );
+		$i->sendOtp( $this->current_otp );
 
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
@@ -300,11 +319,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
+		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
 		if ( $scenario->running() ) {
 			sleep( self::OTP_LIFETIME );
 		}
-		$i->sendOtp( $this->valid_otp );
+		$i->sendOtp( $this->current_otp );
 
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'The Google Authenticator code is incorrect or has expired.', '#login_error' );
@@ -342,8 +361,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, $redirect_to );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->valid_otp );
+		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeCurrentUrlEquals( $redirect_to );
 	}
@@ -412,8 +431,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->amOnPage( sprintf( '/wp-login.php?action=gapup_token&user_id=%s&gapup_login_nonce=%s', self::VALID_USER_ID, self::INVALID_NONCE ) );
-		$this->enterValidOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->valid_otp );
+		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
+		$i->sendOtp( $this->current_otp );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
 	}
@@ -600,7 +619,5 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * Cases to add:
 	 *
 	 * User A enters correct token, then User B enters same token   => User A logged in, user B Redirected to 2FA form, shown error
-	 * Check 'remember me' box                                      => Gets extra cookie or whatever
-	 * Doesn't check 'remember me' box                              => Doesn't get extra cookie or whatever
 	 */
 }
