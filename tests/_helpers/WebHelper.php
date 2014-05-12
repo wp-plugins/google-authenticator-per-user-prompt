@@ -250,7 +250,7 @@ class WebHelper extends \Codeception\Module {
 
 		$i->dontSee( 'Howdy, ' . $username, '#wp-admin-bar-my-account' );
 		$i->seeInCurrentUrl( '/wp-login.php' );
-		$i->dontSeeInCurrentUrl( '/wp-admin/' );	// todo redirect_to fail? is this even needed?
+		$i->dontSeeInCurrentUrl( '/wp-admin/' );
 	}
 
 	/**
