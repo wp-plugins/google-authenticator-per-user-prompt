@@ -275,8 +275,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		}
 		$i->sendOtp( $current_otp );
 
-		// todo shouldn't this be failing because NONCE_LIFETIME is < OTP_LIFETIME + OTP_DRIFT_TOLERANCE? does that indicate something is broke w/ nonce expiration code in verify_login_nonce()?
-
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'The Google Authenticator code is incorrect or has expired.', '#login_error' );
 	}
@@ -571,5 +569,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * Cases to add:
 	 *
 	 * User A enters correct token, then User B enters same token   => User A logged in, user B Redirected to 2FA form, shown error
+	 * Google Authenticator is not active                           => Bootstrap error is shown in wp-admin
 	 */
 }
