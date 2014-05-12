@@ -17,8 +17,9 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_NONCE                   = '00000000000000000000000000000000';
 	const INVALID_APPLICATION_PASSWORD    = 'fake-password';
 	const OTP_SECRET                      = 'FSFMTBLXN52ALUSY';
-	const OTP_LIFETIME                    = 61;	// todo should actually be 31
-	const NONCE_LIFETIME                  = 26;	// see ../tests/readme.txt	// todo can lower this to ~5 or 10 seconds now? would need to update readme.txt
+	const OTP_LIFETIME                    = 30;
+	const OTP_DRIFT_TOLERANCE             = 30;
+	const NONCE_LIFETIME                  = 26;	// see ../tests/readme.txt	// todo can lower this to ~5 or 10 seconds now? would need to update readme.txt and sandbox, and do sleep lifetime + 1.
 	const AUTH_COOKIE_REMEMBERED_DAYS     = 14;
 	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
 
@@ -36,12 +37,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	protected function getCurrentOtp() {
 		require_once( dirname( dirname( dirname( __DIR__ ) ) ) . '/google-authenticator/base32.php' );
 
-		$interval       = 30;	// todo switch to using OTP_LIFETIME, and other references do OTP_LIFETIME + 1
 		$digits         = 6;
 		$secret_binary  = Base32::decode( self::OTP_SECRET );
-		$timecode       = ( time() * 1000 ) / ( $interval * 1000 );
-		$bin_counter    = pack( 'N*', 0 ) . pack( 'N*', $timecode );
-		$hash           = hash_hmac( 'sha1', $bin_counter, $secret_binary, true );
+		$timecode       = ( time() * 1000 ) / ( self::OTP_LIFETIME * 1000 );
+		$counter_binary = pack( 'N*', 0 ) . pack( 'N*', $timecode );
+		$hash           = hash_hmac( 'sha1', $counter_binary, $secret_binary, true );
 		$otp            = $this->oathTruncate( $hash, $digits );
 
 		$this->current_otp = str_pad( $otp, $digits, '0', STR_PAD_LEFT );
@@ -321,9 +321,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
 		if ( $scenario->running() ) {
-			sleep( self::OTP_LIFETIME );
+			sleep( self::OTP_LIFETIME + self::OTP_DRIFT_TOLERANCE + 1 );
 		}
 		$i->sendOtp( $this->current_otp );
+
+		// todo shouldn't this be failling because NONCE_LIFETIME is < OTP_LIFETIME + OTP_DRIFT_TOLERANCE? does that indicate something is broke w/ nonce expiration code in verify_login_nonce()?
 
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'The Google Authenticator code is incorrect or has expired.', '#login_error' );
