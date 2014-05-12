@@ -1,8 +1,6 @@
 <?php
 
-use \WebGuy;
 use \Codeception\Scenario;
-use \PHPUnit_Framework_Assert;
 
 class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	protected $current_otp;

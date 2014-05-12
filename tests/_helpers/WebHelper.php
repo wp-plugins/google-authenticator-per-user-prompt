@@ -1,10 +1,8 @@
 <?php
 namespace Codeception\Module;
 
-use Guzzle\Common\Exception\ExceptionCollection;
 use Guzzle\Http\Message;
 use Symfony\Component\BrowserKit\Cookie;
-use Symfony\Component\DependencyInjection\SimpleXMLElement;
 
 class WebHelper extends \Codeception\Module {
 	const TABLE_PREFIX           = 'wp_';
