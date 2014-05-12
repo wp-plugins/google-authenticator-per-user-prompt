@@ -184,7 +184,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->wantTo( "Log in with the 'Remember Me' flag disabled." );
 
 		$i->enable2fa( self::VALID_USER_ID );
-		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
 		$i->sendOtp( $current_otp );

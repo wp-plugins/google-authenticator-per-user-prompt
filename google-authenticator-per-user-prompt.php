@@ -96,13 +96,14 @@ class Google_Authenticator_Per_User_Prompt {
 			if ( 'enabled' == trim( get_user_option( 'googleauthenticator_enabled', $user->ID ) ) && ! $this->is_using_application_password ) {
 				$login_nonce  = $this->create_login_nonce( $user->ID );
 				$redirect_url = sprintf(
-					'%s?action=gapup_token&user_id=%d&gapup_login_nonce=%s%s',
+					'%s?action=gapup_token&user_id=%d&gapup_login_nonce=%s%s%s',
 					wp_login_url(),
 					$user->ID,
 					$login_nonce['nonce'],
-					isset( $_REQUEST['redirect_to'] ) ? '&redirect_to=' . urlencode( $_REQUEST['redirect_to'] ) : ''
+					isset( $_REQUEST['redirect_to'] ) ? '&redirect_to=' . urlencode( $_REQUEST['redirect_to'] ) : '',
+					isset( $_REQUEST['rememberme']  ) ? '&remember_me=' . sanitize_text_field( $_REQUEST['rememberme'] ) : ''
 				);
-				
+
 				wp_safe_redirect( $redirect_url );
 				die();
 			}	
@@ -143,8 +144,10 @@ class Google_Authenticator_Per_User_Prompt {
 	 */
 	public function prompt_for_token() {
 		$redirect_to = isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : '';
+		$remember_me = isset( $_REQUEST['remember_me'] ) ? sanitize_text_field( $_REQUEST['remember_me'] ) : '';
 		$action_url  = add_query_arg( array( 'action' => 'gapup_token' ), wp_login_url( $redirect_to ) );
-		
+		$action_url  = add_query_arg( array( 'remember_me' => $remember_me ), $action_url );
+
 		if ( ! isset( $_REQUEST['user_id'] ) || ! isset( $_REQUEST['gapup_login_nonce'] ) ) {
 			return;
 		}
@@ -196,9 +199,15 @@ class Google_Authenticator_Per_User_Prompt {
 	 * This is called after the user has successfully entered a token.
 	 */
 	protected function login_user( $user ) {
+		$credentials = array( 'user_login' => $user->user_login );
+
+		if ( ! empty ( $_REQUEST['remember_me'] ) ) {
+			$credentials['remember'] = sanitize_text_field( $_REQUEST['remember_me'] );
+		}
+
 		remove_action( 'wp_login',  array( $this, 'maybe_prompt_for_token' ), 10, 2 );	// otherwise the user would be logged out and redirected back to the token form
 		add_action( 'authenticate', array( $this, 'verify_original_login' ), 40, 3 );   // after username/password and cookie checks
-		$user = wp_signon( array( 'user_login' => $user->user_login ) );
+		$user = wp_signon( $credentials );
 		remove_action( 'authenticate', array( $this, 'verify_original_login' ), 40, 3 );
 		
 		if ( is_a( $user, 'WP_User' ) ) {

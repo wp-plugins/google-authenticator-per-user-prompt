@@ -3,7 +3,7 @@ Contributors:      iandunn
 Donate link:       http://nhmin.org
 Tags:              google authenticator,two factor authentication
 Requires at least: 3.5
-Tested up to:      3.9
+Tested up to:      3.9.1
 Stable tag:        0.4
 License:           GPLv2 or Later
 
@@ -49,6 +49,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 == Changelog ==
 
 = v0.5 () =
+* [FIX] The 'Remember Me' flag is no longer ignored when logging in.
 * [NEW] Added an automated acceptance test suite. Alliteration FTW!
 
 = v0.4 (2013-12-30) =
@@ -67,7 +68,7 @@ There are several alternate methods of deactivating the plugin: you can [delete 
 == Upgrade Notice ==
 
 = 0.5 =
-[todo]
+This version fixes a bug where the 'Remember Me' flag was ignored while logging in.
 
 = 0.4 =
 This version adds support for the new application password format that will be used in Google Authenticator 0.45.
