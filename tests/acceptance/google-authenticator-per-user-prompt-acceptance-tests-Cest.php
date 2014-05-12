@@ -17,8 +17,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const INVALID_NONCE                   = '00000000000000000000000000000000';
 	const INVALID_APPLICATION_PASSWORD    = 'fake-password';
 	const OTP_SECRET                      = 'FSFMTBLXN52ALUSY';
-	const OTP_LIFETIME                    = 30;	// todo append seconds
-	const OTP_DRIFT_TOLERANCE             = 30;
+	const OTP_LIFETIME_SECONDS            = 30;
+	const OTP_DRIFT_TOLERANCE_SECONDS     = 30;
 	const NONCE_LIFETIME_SECONDS          = 5;	// see ../tests/readme.txt
 	const AUTH_COOKIE_REMEMBERED_DAYS     = 14;
 	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
@@ -39,7 +39,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$digits         = 6;
 		$secret_binary  = Base32::decode( self::OTP_SECRET );
-		$timecode       = ( time() * 1000 ) / ( self::OTP_LIFETIME * 1000 );
+		$timecode       = ( time() * 1000 ) / ( self::OTP_LIFETIME_SECONDS * 1000 );
 		$counter_binary = pack( 'N*', 0 ) . pack( 'N*', $timecode );
 		$hash           = hash_hmac( 'sha1', $counter_binary, $secret_binary, true );
 		$otp            = $this->oathTruncate( $hash, $digits );
@@ -321,7 +321,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
 		if ( $scenario->running() ) {
-			sleep( self::OTP_LIFETIME + self::OTP_DRIFT_TOLERANCE + 1 );
+			sleep( self::OTP_LIFETIME_SECONDS + self::OTP_DRIFT_TOLERANCE_SECONDS + 1 );
 		}
 		$i->sendOtp( $this->current_otp );
 
