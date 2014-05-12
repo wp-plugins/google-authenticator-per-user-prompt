@@ -3,8 +3,6 @@
 use \Codeception\Scenario;
 
 class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
-	protected $current_otp;
-
 	const VALID_USER_ID                   = 2;
 	const VALID_USERNAME                  = '2fa-tester';
 	const VALID_PASSWORD                  = 'password';
@@ -20,53 +18,6 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const NONCE_LIFETIME_SECONDS          = 5;	// see ../readme.txt
 	const AUTH_COOKIE_REMEMBERED_DAYS     = 14;
 	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
-
-	/**
-	 * Generate the current OTP.
-	 *
-	 * Borrowed heavily from https://www.idontplaydarts.com/2011/07/google-totp-two-factor-authentication-for-php/
-	 *
-	 * @todo This should be in the helper, but I'm not sure there'd be a way to access the
-	 *       value. It wouldn't be returned, and codeception uses call_user_func(), which won't pass
-	 *       by reference.
-	 *       Probably extract these two functions into a separate class, and just require and call that.
-	 *       Require it on setup().
-	 *
-	 */
-	protected function getCurrentOtp() {
-		require_once( dirname( dirname( dirname( __DIR__ ) ) ) . '/google-authenticator/base32.php' );
-
-		$digits         = 6;
-		$secret_binary  = Base32::decode( self::OTP_SECRET );
-		$timecode       = ( time() * 1000 ) / ( self::OTP_LIFETIME_SECONDS * 1000 );
-		$counter_binary = pack( 'N*', 0 ) . pack( 'N*', $timecode );
-		$hash           = hash_hmac( 'sha1', $counter_binary, $secret_binary, true );
-		$otp            = $this->oathTruncate( $hash, $digits );
-
-		$this->current_otp = str_pad( $otp, $digits, '0', STR_PAD_LEFT );
-	}
-
-	/**
-	 * Extracts the OTP from the SHA1 hash.
-	 *
-	 * Modified from https://www.idontplaydarts.com/2011/07/google-totp-two-factor-authentication-for-php/
-	 *
-	 * @param string $hash
-	 * @param int $digits
-	 * @return integer
-	 */
-	protected function oathTruncate( $hash, $digits ) {
-		$offset = ord( $hash[19] ) & 0xf;
-
-		$code = (
-			( ( ord( $hash[ $offset + 0 ] ) & 0x7f ) << 24 ) |
-			( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
-			( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
-			( ord( $hash[ $offset + 3 ] ) & 0xff )
-		);
-
-		return $code % pow( 10, $digits );
-	}
 
 	/**
 	 * Attempt to login with an invalid username or password.
@@ -160,8 +111,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->getCurrentOtp();
-		$i->sendOtp( $this->current_otp );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
+		$i->sendOtp( $current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 	}
 
@@ -197,8 +148,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->current_otp );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
+		$i->sendOtp( $current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeAuthCookieExpiresInDays( self::VALID_USER_ID, self::AUTH_COOKIE_REMEMBERED_DAYS );
 	}
@@ -235,8 +186,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, false, true );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->current_otp );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
+		$i->sendOtp( $current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeAuthCookieExpiresInDays( self::VALID_USER_ID, self::AUTH_COOKIE_NOT_REMEMBERED_DAYS );
 	}
@@ -275,11 +226,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 
-		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
 		if ( $scenario->running() ) {
 			sleep( self::NONCE_LIFETIME_SECONDS + 1 );
 		}
-		$i->sendOtp( $this->current_otp );
+		$i->sendOtp( $current_otp );
 
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
@@ -318,11 +269,11 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 
-		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
 		if ( $scenario->running() ) {
 			sleep( self::OTP_LIFETIME_SECONDS + self::OTP_DRIFT_TOLERANCE_SECONDS + 1 );
 		}
-		$i->sendOtp( $this->current_otp );
+		$i->sendOtp( $current_otp );
 
 		// todo shouldn't this be failing because NONCE_LIFETIME is < OTP_LIFETIME + OTP_DRIFT_TOLERANCE? does that indicate something is broke w/ nonce expiration code in verify_login_nonce()?
 
@@ -362,8 +313,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD, $redirect_to );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
-		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->current_otp );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
+		$i->sendOtp( $current_otp );
 		$i->amLoggedIn( self::VALID_USERNAME );
 		$i->seeCurrentUrlEquals( $redirect_to );
 	}
@@ -432,8 +383,8 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 
 		$i->enable2fa( self::VALID_USER_ID );
 		$i->amOnPage( sprintf( '/wp-login.php?action=gapup_token&user_id=%s&gapup_login_nonce=%s', self::VALID_USER_ID, self::INVALID_NONCE ) );
-		$this->getCurrentOtp( $i, $scenario, self::VALID_USERNAME );
-		$i->sendOtp( $this->current_otp );
+		$current_otp = GAPUPAT_One_Time_Passwords::getCurrentOtp( self::OTP_SECRET, self::OTP_LIFETIME_SECONDS );
+		$i->sendOtp( $current_otp );
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'Your login nonce has expired. Please log in again.', '#login_error' );
 	}

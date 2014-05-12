@@ -10,6 +10,15 @@ class WebHelper extends \Codeception\Module {
 	const REGEX_LOGGED_IN_COOKIE = '/(wordpress_logged_in_)([0-9a-zA-Z]){32}/';
 
 	/**
+	 * Initialization
+	 *
+	 * Runs after Codeception configuration is loaded.
+	 */
+	public function _initialize() {
+		require_once( __DIR__ . '/GAPUPAT_One_Time_Passwords.php' );
+	}
+
+	/**
 	 * Send a login request with the given username and password.
 	 *
 	 * @param string $username
