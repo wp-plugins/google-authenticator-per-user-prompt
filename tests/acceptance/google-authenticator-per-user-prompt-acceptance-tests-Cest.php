@@ -17,7 +17,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const OTP_SECRET                      = 'FSFMTBLXN52ALUSY';
 	const OTP_LIFETIME_SECONDS            = 30;
 	const OTP_DRIFT_TOLERANCE_SECONDS     = 30;
-	const NONCE_LIFETIME_SECONDS          = 5;	// see ../tests/readme.txt
+	const NONCE_LIFETIME_SECONDS          = 5;	// see ../readme.txt
 	const AUTH_COOKIE_REMEMBERED_DAYS     = 14;
 	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
 
@@ -30,6 +30,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 *       value. It wouldn't be returned, and codeception uses call_user_func(), which won't pass
 	 *       by reference.
 	 *       Probably extract these two functions into a separate class, and just require and call that.
+	 *       Require it on setup().
 	 *
 	 */
 	protected function getCurrentOtp() {
