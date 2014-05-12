@@ -325,7 +325,7 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 		}
 		$i->sendOtp( $this->current_otp );
 
-		// todo shouldn't this be failling because NONCE_LIFETIME is < OTP_LIFETIME + OTP_DRIFT_TOLERANCE? does that indicate something is broke w/ nonce expiration code in verify_login_nonce()?
+		// todo shouldn't this be failing because NONCE_LIFETIME is < OTP_LIFETIME + OTP_DRIFT_TOLERANCE? does that indicate something is broke w/ nonce expiration code in verify_login_nonce()?
 
 		$i->amNotLoggedIn( self::VALID_USERNAME );
 		$i->see( 'The Google Authenticator code is incorrect or has expired.', '#login_error' );
