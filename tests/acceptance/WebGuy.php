@@ -2065,6 +2065,25 @@ class WebGuy extends \Codeception\AbstractGuy
      * Documentation taken from corresponding module.
      * ----------------------------------------------
      *
+     * Disables the Google Authenticator plugin.
+     * @see Codeception\Module\WebHelper::disableGoogleAuthenticator()
+     * @return \Codeception\Maybe
+     */
+    public function disableGoogleAuthenticator() {
+        $this->scenario->addStep(new \Codeception\Step\Action('disableGoogleAuthenticator', func_get_args()));
+        if ($this->scenario->running()) {
+            $result = $this->scenario->runStep();
+            return new Maybe($result);
+        }
+        return new Maybe();
+    }
+
+ 
+    /**
+     * This method is generated.
+     * Documentation taken from corresponding module.
+     * ----------------------------------------------
+     *
      * Send a login request with the given username and password.
 	 *
 	 * @param string $username

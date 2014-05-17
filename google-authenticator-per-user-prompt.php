@@ -184,6 +184,7 @@ class Google_Authenticator_Per_User_Prompt {
 			if ( is_a( $user, 'WP_User' ) ) {
 				$error_message = $this->login_user( $user );
 			} elseif ( is_wp_error( $user ) ) {
+				/** @var $user WP_Error */
 				$error_message = $user->get_error_message();
 			} else {
 				$error_message = '<strong>ERROR:</strong> Token could not be validated';

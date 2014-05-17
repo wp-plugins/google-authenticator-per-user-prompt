@@ -19,6 +19,17 @@ class WebHelper extends \Codeception\Module {
 	}
 
 	/**
+	 * Disables the Google Authenticator plugin.
+	 */
+	public function disableGoogleAuthenticator() {
+		$this->getModule( 'Db' )->dbh->exec("
+			UPDATE ". self::TABLE_PREFIX ."options
+			SET option_value = 'a:1:{i:0;s:50:\"google-authenticator-per-user-prompt/bootstrap.php\";}'
+			WHERE option_id = 37
+		");
+	}
+
+	/**
 	 * Send a login request with the given username and password.
 	 *
 	 * @param string $username

@@ -20,6 +20,31 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	const AUTH_COOKIE_NOT_REMEMBERED_DAYS = 2;
 
 	/**
+	 * Attempt to use the plugin without Google Authenticator activated.
+	 *
+	 * Conditions:
+	 *     Google Authenticator is: Disabled
+	 *     Username/password are:   Valid
+	 *
+	 * Action:           Visit the Administration Panels.
+	 * Expected results: The user is shown an error.
+	 *
+	 * @group valid_username_password
+	 * @group google_authenticator_disabled
+	 *
+	 * @param WebGuy   $i
+	 * $param Scenario $scenario
+	 */
+	public function use_plugin_without_google_authenticator( WebGuy $i, Scenario $scenario ) {
+		$i->wantTo( 'Use the plugin without Google Authenticator activated.' );
+
+		$i->disableGoogleAuthenticator();
+		$i->login( self::VALID_USERNAME, self::VALID_PASSWORD );
+		$i->amLoggedIn( self::VALID_USERNAME );
+		$i->see( "Google Authenticator - Per User Prompt error: Your environment doesn't meet all of the system requirements listed below.", 'div.error' );
+	}
+
+	/**
 	 * Attempt to login with an invalid username or password.
 	 *
 	 * Conditions:
@@ -569,6 +594,5 @@ class Google_Authenticator_Per_User_Prompt_Acceptance_Tests {
 	 * Cases to add:
 	 *
 	 * User A enters correct token, then User B enters same token   => User A logged in, user B Redirected to 2FA form, shown error
-	 * Google Authenticator is not active                           => Bootstrap error is shown in wp-admin
 	 */
 }
