@@ -3,7 +3,7 @@
 Plugin Name: Google Authenticator - Per User Prompt
 Plugin URI:  http://wordpress.org/plugins/google-authenticator-per-user-prompt
 Description: Modifies the Google Authenticator plugin so that only users with 2FA enabled are prompted for the authentication token.
-Version:     0.4
+Version:     0.5
 Author:      Ian Dunn
 Author URI:  http://iandunn.name
 */
