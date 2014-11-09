@@ -1,7 +1,7 @@
 <?php
 namespace Codeception\Module;
 
-use Guzzle\Http\Message;
+use GuzzleHttp\Message;
 use Symfony\Component\BrowserKit\Cookie;
 
 class WebHelper extends \Codeception\Module {
@@ -34,7 +34,7 @@ class WebHelper extends \Codeception\Module {
 	 *
 	 * @param string $username
 	 * @param string $password
-	 * @param string $redirect_to
+	 * @param bool   $redirect_to
 	 * @param bool   $remember_me
 	 */
 	public function login( $username, $password, $redirect_to = false, $remember_me = false ) {
@@ -47,8 +47,8 @@ class WebHelper extends \Codeception\Module {
 		}
 
 		$i->amOnPage( $url );
-		$i->fillField( 'user_login', $username );
-		$i->fillField( 'user_pass', $password );
+		$i->fillField( array( 'id' => 'user_login' ), $username );
+		$i->fillField( array( 'id' => 'user_pass' ),  $password );
 
 		if ( $remember_me ) {
 			$i->checkOption( '#rememberme' );
@@ -106,7 +106,7 @@ class WebHelper extends \Codeception\Module {
 
 		$i->see( 'Google Authenticator code' );
 		$i->seeInCurrentUrl( 'action=gapup_token' );
-		$i->fillField( 'user_email', $otp );	// [sic], Google Authenticator uses the e-mail field instead of one named more appropriately
+		$i->fillField( array( 'id' => 'user_email' ), $otp );	// [sic], Google Authenticator uses the e-mail field instead of one named more appropriately
 		$i->click( '#gapup_token_prompt' );
 	}
 
@@ -120,7 +120,7 @@ class WebHelper extends \Codeception\Module {
 		/** @var $cookie Cookie */
 
 		$found   = false;
-		$cookies = $this->getModule( 'PhpBrowser' )->session->getDriver()->getClient()->getCookieJar()->all();
+		$cookies = $this->getModule( 'PhpBrowser' )->client->getCookieJar()->all();
 
 		$this->debug( print_r( $cookies, true ) );
 
@@ -190,7 +190,7 @@ class WebHelper extends \Codeception\Module {
 		/** @var $cookie Cookie */
 
 		$found   = false;
-		$cookies = $this->getModule( 'PhpBrowser' )->session->getDriver()->getClient()->getCookieJar()->all();
+		$cookies = $this->getModule( 'PhpBrowser' )->client->getCookieJar()->all();
 
 		foreach ( $cookies as $cookie ) {
 			if ( $this->cookieMatches( $cookie, self::REGEX_AUTH_COOKIE ) ) {
@@ -322,8 +322,10 @@ class WebHelper extends \Codeception\Module {
 			'<name>blogName</name><value><string>General WordPress Sandbox</string></value>',
 		);
 
-		$response      = $this->sendHttpRequest( 'POST', 'xmlrpc.php', array(), $request_body, array() );
-		$response_body = $response->getBody( true );
+		$response      = $this->sendHttpRequest( 'POST', 'xmlrpc.php', array( 'body' => $request_body ) );
+		$response_body = $response->getBody()->getContents();
+
+		$this->debug( '$response_body: '. $response_body );
 
 		foreach ( $expected_response_strings as $needle ) {
 			if ( false === strpos( $response_body, $needle ) ) {
@@ -339,12 +341,10 @@ class WebHelper extends \Codeception\Module {
 	 *
 	 * @param string $method GET | POST
 	 * @param string $url
-	 * @param array  $headers
-	 * @param string $body
 	 * @param array  $options
 	 * @return Message\Response $response
 	 */
-	protected function sendHttpRequest( $method, $url, $headers, $body, $options ) {
+	protected function sendHttpRequest( $method, $url, $options ) {
 		/** @var $i        PhpBrowser */
 		/** @var $response Message\Response */
 
@@ -352,13 +352,12 @@ class WebHelper extends \Codeception\Module {
 		$url = $i->_getUrl() . $url;
 
 		$response = $i->executeInGuzzle(
-			function( \Guzzle\Http\Client $client ) use ( $method, $url, $headers, $body, $options ) {
-				return $client->send( $client->createRequest( $method, $url, $headers, $body, $options ) );
+			function( \GuzzleHttp\Client $client ) use ( $method, $url, $options ) {
+				return $client->send( $client->createRequest( $method, $url, $options ) );
 			}
 		);
 
-		$this->debug( $response->getRawHeaders() );
-		$this->debug( $response->getBody( true ) );
+		$this->debug( print_r( $response, true ) );
 
 		return $response;
 	}
