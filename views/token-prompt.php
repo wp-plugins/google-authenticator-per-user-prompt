@@ -1,4 +1,8 @@
-<?php login_header(); ?>
+<?php
+	if ( function_exists( 'login_header' ) ) {
+		login_header();
+	}
+?>
 
 	<?php if ( $error_message ) : ?>
 		<div id="login_error">
@@ -18,4 +22,8 @@
 		</p>
 	</form>
 	
-<?php login_footer( 'user_email' ); // This actually focuses the 2FA token field, but Google Authenticator named it user_email ?>
+<?php
+	if ( function_exists( 'login_footer' ) ) {
+		login_footer( 'user_email' );    // This actually focuses the 2FA token field, but Google Authenticator named it user_email
+	}
+?>
